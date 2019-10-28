@@ -24,10 +24,13 @@ Any function that involves modifying EPGP standings requires you to be able to e
 The following commands can be used to get EPGP reports.
 
 **The player you whisper must be able to at least view officer notes**
-* /w player !info - Gets your current EPGP standings
-* /w player !infoguild - Gets your current EPGP standings and PR rank within your guild
-* /w player !inforaid - Gets your current EPGP standings and PR rank within the raid
-* /w player !infoclass - Gets your current EPGP standing	s and PR rank among your class within the raid
+
+| Command                    | Result                                                                        |
+|----------------------------|-------------------------------------------------------------------------------|
+| ```/w player !info```      | Gets your current EPGP standings                                              |
+| ```/w player !infoguild``` | Gets your current EPGP standings and PR rank within your guild                |
+| ```/w player !inforaid```  | Gets your current EPGP standings and PR rank within the raid                  |
+| ```/w player !infoclass``` | Gets your current EPGP standings and PR rank among your class within the raid |
 
 Definitions:
 * EP: Effort points. Points gained from what ever criteria.
