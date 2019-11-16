@@ -3975,6 +3975,7 @@
 				self:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
 				self:RegisterEvent("PARTY_LOOT_METHOD_CHANGED");
 				self:RegisterEvent("CHAT_MSG_BN_WHISPER");
+				self:RegisterEvent("GET_ITEM_INFO_RECEIVED");
 			</OnLoad>
 			<OnMouseDown>
 				self:StartMoving();

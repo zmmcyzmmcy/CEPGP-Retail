@@ -951,6 +951,20 @@ function CEPGP_inOverride(itemName)
 	return false;
 end
 
+function CEPGP_updateOverride(id)
+	if not id then return; end
+	id = tonumber(id);
+	local name, iString = GetItemInfo(id);
+	for item, _ in pairs(OVERRIDE_INDEX) do
+		if string.lower(name) == string.lower(item) then
+			OVERRIDE_INDEX[iString] = OVERRIDE_INDEX[name];
+			OVERRIDE_INDEX[item] = nil;
+			CEPGP_UpdateOverrideScrollBar();
+			return;
+		end
+	end
+end
+
 function CEPGP_tContains(t, val, bool)
 	if not t then return; end
 	if bool == nil then

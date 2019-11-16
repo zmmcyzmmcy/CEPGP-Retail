@@ -89,8 +89,13 @@ function CEPGP_OnEvent(event, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, ar
 	
 	if event == "ADDON_LOADED" and arg1 == "CEPGP" then --arg1 = addon name
 		CEPGP_initialise();
+		
 	elseif event == "GUILD_ROSTER_UPDATE" or event == "GROUP_ROSTER_UPDATE" then
 		CEPGP_rosterUpdate(event);
+	
+	elseif event == "GET_ITEM_INFO_RECEIVED" then
+		local id, success = arg1, arg2;
+		if success then CEPGP_updateOverride(id); end
 		
 	elseif event == "PARTY_LOOT_METHOD_CHANGED" then
 		if GetLootMethod() == "master" and IsInRaid("player") and CEPGP_isML() == 0 then
