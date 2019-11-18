@@ -124,10 +124,22 @@ function CEPGP_ListButton_OnClick(obj)
 	
 	--[[ Distribution Menu ]]--
 	if strfind(obj, "LootDistButton") then --A player in the distribution menu is clicked
+		local discount = CEPGP_response_buttons[_G[obj]:GetAttribute("response")][3];
+		local response = _G[obj]:GetAttribute("responseName");
+		local gp = CEPGP_distribute_GP_value:GetText();
+		CEPGP_distribute_popup_gp_full:SetText("Give for " .. gp .. " GP");
+		CEPGP_distribute_popup_gp:SetText("Give for " .. math.floor(gp*(discount/100)) .. " GP");
 		ShowUIPanel(CEPGP_distribute_popup);
-		CEPGP_distribute_popup_title:SetText(_G[_G[obj]:GetName() .. "Info"]:GetText());
+		CEPGP_distribute_popup_title:SetText(_G[_G[obj]:GetName() .. "Info"]:GetText() .. " responded with " .. response .. "\n" .. discount .. "% discount");
 		CEPGP_distPlayer = _G[_G[obj]:GetName() .. "Info"]:GetText();
 		CEPGP_distribute_popup:SetID(CEPGP_distribute:GetID()); --CEPGP_distribute:GetID gets the ID of the LOOT SLOT. Not the player.
+		CEPGP_distribute_popup_gp:SetScript('OnClick', function()
+			CEPGP_rate = discount/100;
+			CEPGP_distGP = true;
+			CEPGP_award = true;
+			PlaySound(799);
+			CEPGP_distribute_popup_give();
+		end);
 		return;
 	
 		--[[ Guild Menu ]]--

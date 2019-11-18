@@ -102,8 +102,34 @@ function CEPGP_announce(link, x, slotNum, quantity)
 			CEPGP_SendAddonMsg("RaidAssistLootDist;"..link..";"..gp..";false", "RAID");
 		end
 		if CEPGP_loot_GUI then
-			CEPGP_callItem(id, gp);
-			CEPGP_SendAddonMsg("CallItem;"..id .. ";" .. gp, "RAID");
+			local call = "CallItem;"..id..";"..gp;
+			local buttons = {};
+			if CEPGP_response_buttons[1][1] then
+				call = call .. ";" .. CEPGP_response_buttons[1][2];
+				buttons[1] = CEPGP_response_buttons[1][2];
+			else
+				call = call .. ";";
+			end
+			if CEPGP_response_buttons[2][1] then
+				call = call .. ";" .. CEPGP_response_buttons[2][2];
+				buttons[2] = CEPGP_response_buttons[2][2];
+			else
+				call = call .. ";";
+			end
+			if CEPGP_response_buttons[3][1] then
+				call = call .. ";" .. CEPGP_response_buttons[3][2];
+				buttons[3] = CEPGP_response_buttons[3][2];
+			else
+				call = call .. ";";
+			end
+			if CEPGP_response_buttons[4][1] then
+				call = call .. ";" .. CEPGP_response_buttons[4][2];
+				buttons[4] = CEPGP_response_buttons[4][2];
+			else
+				call = call .. ";";
+			end
+			CEPGP_callItem(id, gp, buttons);
+			CEPGP_SendAddonMsg(call, "RAID");
 			SendChatMessage("NOW DISTRIBUTING: " .. link .. " for " .. gp .. " GP", "RAID_WARNING", CEPGP_LANGUAGE);
 		else
 			SendChatMessage("--------------------------", "RAID", CEPGP_LANGUAGE);
@@ -137,6 +163,7 @@ function CEPGP_announce(link, x, slotNum, quantity)
 		_G["CEPGP_distribute_item_tex"]:SetScript('OnLeave', function() GameTooltip:Hide() end);
 		_G["CEPGP_distribute_GP_value"]:SetText(gp);
 		CEPGP_distributing = true;
+		CEPGP_button_options_loot_gui:Disable();
 	elseif GetLootMethod() == "master" then
 		CEPGP_print("You are not the Loot Master.", 1);
 		return;

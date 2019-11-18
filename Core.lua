@@ -1,5 +1,5 @@
 --[[ Globals ]]--
-CEPGP_VERSION = "1.12.7";
+CEPGP_VERSION = "1.12.8";
 SLASH_CEPGP1 = "/CEPGP";
 SLASH_CEPGP2 = "/cep";
 CEPGP_VERSION_NOTIFIED = false;
@@ -41,6 +41,7 @@ CEPGP_snapshot = nil;
 CEPGP_use = false;
 CEPGP_ignoreUpdates = false;
 CEPGP_award = false;
+CEPGP_rate = 1;
 CEPGP_plugins = {};
 
 --[[ SAVED VARIABLES ]]--
@@ -80,6 +81,7 @@ TRAFFIC = {};
 CEPGP_raid_logs = {};
 CEPGP_standbyRoster = {};
 CEPGP_minEP = {false, 0};
+CEPGP_response_buttons = {[1]={true, "Main Spec", 0},[2]={false, "Off Spec", 0},[3]={false, "Disenchant", 0},[4]={false, "", 0}};
 
 local L = CEPGP_Locale:GetLocale("CEPGP")
 

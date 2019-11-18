@@ -55,7 +55,6 @@ function CEPGP_initialise()
 			["WEAPONOFFHAND"] = 0.5,
 			["HOLDABLE"] = 0.5,
 			["SHIELD"] = 0.5,
-			["RANGED"] = 0.5,
 			["RANGEDRIGHT"] = 0.5,
 			["THROWN"] = 0.5,
 			["RELIC"] = 0.5,
@@ -204,7 +203,6 @@ function CEPGP_calcGP(link, quantity, id)
 		end
 		
 		if slot == "INVTYPE_ROBE" then slot = "INVTYPE_CHEST"; end
-		if slot == "INVTYPE_WEAPON" then slot = "INVTYPE_WEAPONOFFHAND"; end
 		if CEPGP_debugMode then
 			local quality = rarity == 0 and "Poor" or rarity == 1 and "Common" or rarity == 2 and "Uncommon" or rarity == 3 and "Rare" or rarity == 4 and "Epic" or "Legendary";
 			CEPGP_print("Name: " .. name);
@@ -364,15 +362,15 @@ function CEPGP_populateFrame(CEPGP_criteria, items)
 				subframe.itemGP:SetWidth(35);
 				
 				if i == 1 then
-					subframe.announce:SetPoint('CENTER', _G['CEPGP_'..CEPGP_mode..'_announce'], 'BOTTOM', -10, -20);
-					subframe.icon:SetPoint('LEFT', _G[CEPGP_mode..'announce'..i], 'RIGHT', 10, 0);
-					tex:SetPoint('LEFT', _G[CEPGP_mode..'announce'..i], 'RIGHT', 10, 0);
+					subframe.announce:SetPoint('CENTER', _G['CEPGP_'..CEPGP_mode..'_announce'], 'BOTTOM', 0, -20);
+					subframe.icon:SetPoint('LEFT', _G[CEPGP_mode..'announce'..i], 'RIGHT', 30, 0);
+					tex:SetPoint('LEFT', _G[CEPGP_mode..'announce'..i], 'RIGHT', 30, 0);
 					subframe.itemName:SetPoint('LEFT', _G[CEPGP_mode..'icon'..i], 'RIGHT', 10, 0);
 					subframe.itemGP:SetPoint('CENTER', _G['CEPGP_'..CEPGP_mode..'_GP'], 'BOTTOM', 10, -20);
 				else
 					subframe.announce:SetPoint('CENTER', _G[CEPGP_mode..'announce'..(i-1)], 'BOTTOM', 0, -20);
-					subframe.icon:SetPoint('LEFT', _G[CEPGP_mode..'announce'..i], 'RIGHT', 10, 0);
-					tex:SetPoint('LEFT', _G[CEPGP_mode..'announce'..i], 'RIGHT', 10, 0);
+					subframe.icon:SetPoint('LEFT', _G[CEPGP_mode..'announce'..i], 'RIGHT', 30, 0);
+					tex:SetPoint('LEFT', _G[CEPGP_mode..'announce'..i], 'RIGHT', 30, 0);
 					subframe.itemName:SetPoint('LEFT', _G[CEPGP_mode..'icon'..i], 'RIGHT', 10, 0);
 					subframe.itemGP:SetPoint('CENTER', _G[CEPGP_mode..'itemGP'..(i-1)], 'BOTTOM', 0, -20);
 				end
@@ -1115,6 +1113,11 @@ function CEPGP_button_options_OnClick()
 	CEPGP_options_coef_2_edit:SetText(tostring(MOD_COEF));
 	CEPGP_options_gp_base_edit:SetText(tostring(BASEGP));
 	CEPGP_options_keyword_edit:SetText(tostring(CEPGP_keyword));
+	if CEPGP_loot_GUI then
+		CEPGP_button_options_loot_gui:Show();
+	else
+		CEPGP_button_options_loot_gui:Hide();
+	end
 	if STANDBYEP then
 		CEPGP_options_standby_ep_check:SetChecked(true);
 	else
@@ -1144,8 +1147,9 @@ function CEPGP_button_options_OnClick()
 		CEPGP_options_standby_ep_message_val:Show();
 		CEPGP_options_standby_ep_whisper_message:Show();
 	end
+	SLOTWEIGHTS["RANGED"] = nil;
 	for k, v in pairs(SLOTWEIGHTS) do
-		if k ~= "ROBE" and k ~= "WEAPON" and k ~= "EXCEPTION" then
+		if k ~= "ROBE" and k ~= "EXCEPTION" then
 			_G["CEPGP_options_" .. k .. "_weight"]:SetText(tonumber(SLOTWEIGHTS[k]));
 		end
 	end
@@ -1569,7 +1573,7 @@ function CEPGP_calcAttIntervals()
 	return week, fn, mon, twoMon, threeMon;
 end
 
-function CEPGP_callItem(id, gp)
+function CEPGP_callItem(id, gp, buttons)
 	if not id then return; end
 	id = tonumber(id); -- Must be in a numerical format
 	local name, link, _, _, _, _, _, _, _, tex, _, classID, subClassID = GetItemInfo(id);
@@ -1596,6 +1600,14 @@ function CEPGP_callItem(id, gp)
 				_G["CEPGP_respond_item_name_frame"]:SetScript('OnClick', function() SetItemRef(iString, name); end);
 				_G["CEPGP_respond_item_name"]:SetText(link);
 				_G["CEPGP_respond_gp_value"]:SetText(gp);
+				for i = 1, 4 do
+					if buttons[i] ~= "" and buttons[i] then
+						_G["CEPGP_respond_"..i]:Show();
+						_G["CEPGP_respond_"..i]:SetText(buttons[i]);
+					else
+						_G["CEPGP_respond_"..i]:Hide();
+					end
+				end
 			end);
 	else
 		if not CEPGP_canEquip(GetItemSubClassInfo(classID, subClassID)) and CEPGP_auto_pass then
@@ -1616,6 +1628,14 @@ function CEPGP_callItem(id, gp)
 		_G["CEPGP_respond_item_name_frame"]:SetScript('OnClick', function() SetItemRef(iString, name); end);
 		_G["CEPGP_respond_item_name"]:SetText(link);
 		_G["CEPGP_respond_gp_value"]:SetText(gp);
+		for i = 1, 4 do
+			if buttons[i] ~= "" and buttons[i] then
+				_G["CEPGP_respond_"..i]:Show();
+				_G["CEPGP_respond_"..i]:SetText(buttons[i]);
+			else
+				_G["CEPGP_respond_"..i]:Hide();
+			end
+		end
 	end
 end
 

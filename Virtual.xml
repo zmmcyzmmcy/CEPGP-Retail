@@ -1,7 +1,10 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
 ..\FrameXML\UI.xsd">
 	
-	<Button name="CEPGPHeaderButton" virtual="true">
+	<Button name="CEPGPHeaderButton" virtual="true" justifyH="LEFT">
+		<Size>
+			<AbsDimension x="30" y="20" />
+		</Size>
 		<ButtonText style="$parentText"/>
 		<NormalFont style="GameFontNormal"/>
 		<HighlightFont style="GameFontHighlight"/>
@@ -37,7 +40,7 @@
 	
 	<Button name="LootDistButtonTemplate" virtual="true">
 		<Size>
-			<AbsDimension x="420" y="15"/>
+			<AbsDimension x="580" y="15"/>
 		</Size>
 		<Layers>
 			<Layer level="OVERLAY">
@@ -46,9 +49,9 @@
 						<AbsDimension x="15" y="15" />
 					</Size>
 					<Anchors>
-						<Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT">
+						<Anchor point="RIGHT" relativeTo="$parent" relativePoint="RIGHT">
 							<Offset>
-								<AbsDimension x="370" y="0" />
+								<AbsDimension x="-50" y="0" />
 							</Offset>
 						</Anchor>
 					</Anchors>
@@ -94,51 +97,64 @@
 				</FontString>
 				<FontString name="$parentClass" inherits="GameFontHighlight" justifyH="LEFT">
 					<Anchors>
-						<Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT">
+						<Anchor point="LEFT" relativePoint="LEFT" relativeTo="$parentInfo">
 							<Offset>
-								<AbsDimension x="80" y="0"/>
+								<AbsDimension x="82.5" y="0"/>
 							</Offset>
 						</Anchor>
 					</Anchors>
 				</FontString>
 				<FontString name="$parentRank" inherits="GameFontHighlight" justifyH="LEFT">
 					<Anchors>
-						<Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT">
+						<Anchor point="LEFT" relativePoint="LEFT" relativeTo="$parentClass">
 							<Offset>
-								<AbsDimension x="150" y="0"/>
+								<AbsDimension x="80" y="0"/>
 							</Offset>
 						</Anchor>
 					</Anchors>
 				</FontString>
-				<FontString name="$parentEP" inherits="GameFontHighlight" justifyH="CENTER">
+				<FontString name="$parentResponse" inherits="GameFontHighlight" justifyH="LEFT">
 					<Anchors>
-						<Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT">
+						<Anchor point="LEFT" relativePoint="LEFT" relativeTo="$parentRank">
 							<Offset>
-								<AbsDimension x="242.5" y="0"/>
+								<AbsDimension x="87.5" y="0"/>
 							</Offset>
 						</Anchor>
 					</Anchors>
 				</FontString>
-				<FontString name="$parentGP" inherits="GameFontHighlight" justifyH="CENTER">
+				<FontString name="$parentEP" inherits="GameFontHighlight" justifyH="LEFT">
 					<Anchors>
-						<Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT">
+						<Anchor point="LEFT" relativePoint="LEFT" relativeTo="$parentResponse">
 							<Offset>
-								<AbsDimension x="292.5" y="0"/>
+								<AbsDimension x="87.5" y="0"/>
 							</Offset>
 						</Anchor>
 					</Anchors>
 				</FontString>
-				<FontString name="$parentPR" inherits="GameFontHighlight" justifyH="CENTER">
+				<FontString name="$parentGP" inherits="GameFontHighlight" justifyH="RIGHT">
 					<Anchors>
-						<Anchor point="RIGHT" relativeTo="$parent" relativePoint="LEFT">
+						<Anchor point="RIGHT" relativePoint="LEFT" relativeTo="$parentEP">
 							<Offset>
-								<AbsDimension x="347.5" y="0"/>
+								<AbsDimension x="95" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentPR" inherits="GameFontHighlight" justifyH="RIGHT">
+					<Anchors>
+						<Anchor point="RIGHT" relativePoint="RIGHT" relativeTo="$parentGP">
+							<Offset>
+								<AbsDimension x="70" y="0"/>
 							</Offset>
 						</Anchor>
 					</Anchors>
 				</FontString>
 			</Layer>
 		</Layers>
+		<Attributes>
+			<Attribute name="response" type="int" value="0" />
+			<Attribute name="responseName" type="string" value=""/>
+		</Attributes>
 		<Scripts>
 			<OnLoad>
 				self:RegisterForClicks("LeftButtonDown");
@@ -154,7 +170,7 @@
 	</Button>
 	<Button name="GuildButtonTemplate" virtual="true">
 		<Size>
-			<AbsDimension x="420" y="15"/>
+			<AbsDimension x="580" y="15"/>
 		</Size>
 		<Frames>
 		</Frames>
@@ -171,45 +187,45 @@
 				</FontString>
 				<FontString name="$parentClass" inherits="GameFontHighlight" justifyH="LEFT">
 					<Anchors>
-						<Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT">
+						<Anchor point="LEFT" relativePoint="LEFT" relativeTo="$parentInfo">
 							<Offset>
-								<AbsDimension x="90" y="0"/>
+								<AbsDimension x="115" y="0"/>
 							</Offset>
 						</Anchor>
 					</Anchors>
 				</FontString>
 				<FontString name="$parentRank" inherits="GameFontHighlight" justifyH="LEFT">
 					<Anchors>
-						<Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT">
+						<Anchor point="LEFT" relativePoint="LEFT" relativeTo="$parentClass">
 							<Offset>
-								<AbsDimension x="165" y="0"/>
+								<AbsDimension x="122.5" y="0"/>
 							</Offset>
 						</Anchor>
 					</Anchors>
 				</FontString>
-				<FontString name="$parentEP" inherits="GameFontHighlight" justifyH="CENTER">
+				<FontString name="$parentEP" inherits="GameFontHighlight" justifyH="LEFT">
 					<Anchors>
-						<Anchor point="CENTER" relativeTo="$parent" relativePoint="LEFT">
+						<Anchor point="LEFT" relativePoint="LEFT" relativeTo="$parentRank">
 							<Offset>
-								<AbsDimension x="290" y="0"/>
+								<AbsDimension x="115" y="0"/>
 							</Offset>
 						</Anchor>
 					</Anchors>
 				</FontString>
-				<FontString name="$parentGP" inherits="GameFontHighlight" justifyH="CENTER">
+				<FontString name="$parentGP" inherits="GameFontHighlight" justifyH="RIGHT">
 					<Anchors>
-						<Anchor point="CENTER" relativeTo="$parent" relativePoint="LEFT">
+						<Anchor point="RIGHT" relativePoint="LEFT" relativeTo="$parentEP">
 							<Offset>
-								<AbsDimension x="340" y="0"/>
+								<AbsDimension x="127.5" y="0"/>
 							</Offset>
 						</Anchor>
 					</Anchors>
 				</FontString>
-				<FontString name="$parentPR" inherits="GameFontHighlight" justifyH="CENTER">
+				<FontString name="$parentPR" inherits="GameFontHighlight" justifyH="RIGHT">
 					<Anchors>
-						<Anchor point="RIGHT" relativeTo="$parent" relativePoint="LEFT">
+						<Anchor point="RIGHT" relativePoint="RIGHT" relativeTo="$parentGP">
 							<Offset>
-								<AbsDimension x="400" y="0"/>
+								<AbsDimension x="70" y="0"/>
 							</Offset>
 						</Anchor>
 					</Anchors>
@@ -239,43 +255,52 @@
 					<Anchors>
 						<Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT">
 							<Offset>
-								<AbsDimension x="5" y="0"/>
+								<AbsDimension x="0" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parentClass" inherits="GameFontHighlight" justifyH="LEFT">
+					<Anchors>
+						<Anchor point="LEFT" relativePoint="LEFT" relativeTo="$parentInfo">
+							<Offset>
+								<AbsDimension x="115" y="0"/>
 							</Offset>
 						</Anchor>
 					</Anchors>
 				</FontString>
 				<FontString name="$parentRank" inherits="GameFontHighlight" justifyH="LEFT">
 					<Anchors>
-						<Anchor point="LEFT" relativeTo="$parentInfo" relativePoint="LEFT">
+						<Anchor point="LEFT" relativePoint="LEFT" relativeTo="$parentClass">
 							<Offset>
-								<AbsDimension x="97" y="0"/>
+								<AbsDimension x="122.5" y="0"/>
 							</Offset>
 						</Anchor>
 					</Anchors>
 				</FontString>
-				<FontString name="$parentEP" inherits="GameFontHighlight" justifyH="CENTER">
+				<FontString name="$parentEP" inherits="GameFontHighlight" justifyH="LEFT">
 					<Anchors>
-						<Anchor point="CENTER" relativeTo="$parentRank" relativePoint="LEFT">
+						<Anchor point="LEFT" relativePoint="LEFT" relativeTo="$parentRank">
 							<Offset>
-								<AbsDimension x="145" y="0"/>
+								<AbsDimension x="115" y="0"/>
 							</Offset>
 						</Anchor>
 					</Anchors>
 				</FontString>
-				<FontString name="$parentGP" inherits="GameFontHighlight" justifyH="CENTER">
+				<FontString name="$parentGP" inherits="GameFontHighlight" justifyH="RIGHT">
 					<Anchors>
-						<Anchor point="CENTER" relativeTo="$parentEP" relativePoint="CENTER">
+						<Anchor point="RIGHT" relativePoint="LEFT" relativeTo="$parentEP">
 							<Offset>
-								<AbsDimension x="75" y="0"/>
+								<AbsDimension x="127.5" y="0"/>
 							</Offset>
 						</Anchor>
 					</Anchors>
 				</FontString>
-				<FontString name="$parentPR" inherits="GameFontHighlight" justifyH="CENTER">
+				<FontString name="$parentPR" inherits="GameFontHighlight" justifyH="RIGHT">
 					<Anchors>
-						<Anchor point="RIGHT" relativeTo="$parent" relativePoint="RIGHT">
+						<Anchor point="RIGHT" relativePoint="RIGHT" relativeTo="$parentGP">
 							<Offset>
-								<AbsDimension x="-20" y="0"/>
+								<AbsDimension x="70" y="0"/>
 							</Offset>
 						</Anchor>
 					</Anchors>
@@ -449,7 +474,7 @@
 					<Anchors>
 						<Anchor point="LEFT" relativeTo="$parentAction" relativePoint="RIGHT">
 							<Offset>
-								<AbsDimension x="35" y="0"/>
+								<AbsDimension x="20" y="0"/>
 							</Offset>
 						</Anchor>
 					</Anchors>
@@ -458,7 +483,7 @@
 					<Anchors>
 						<Anchor point="RIGHT" relativeTo="$parentEPBefore" relativePoint="LEFT">
 							<Offset>
-								<AbsDimension x="70" y="0"/>
+								<AbsDimension x="95" y="0"/>
 							</Offset>
 						</Anchor>
 					</Anchors>
@@ -467,7 +492,7 @@
 					<Anchors>
 						<Anchor point="LEFT" relativeTo="$parentEPAfter" relativePoint="RIGHT">
 							<Offset>
-								<AbsDimension x="40" y="0"/>
+								<AbsDimension x="15" y="0"/>
 							</Offset>
 						</Anchor>
 					</Anchors>
@@ -476,7 +501,7 @@
 					<Anchors>
 						<Anchor point="RIGHT" relativeTo="$parentGPBefore" relativePoint="LEFT">
 							<Offset>
-								<AbsDimension x="70" y="0"/>
+								<AbsDimension x="95" y="0"/>
 							</Offset>
 						</Anchor>
 					</Anchors>
@@ -757,7 +782,7 @@
 					name = "Highlord Mograine";
 				end				
 				self:SetText(tostring(EPVALS[L[name]]));
-				self:SetPoint('LEFT', target, 'LEFT', 275, 0); --FontStrings justify to the left, so for the sake of structuring, it's better to set the relative anchor to left
+				self:SetPoint('LEFT', target, 'LEFT', 420, 0); --FontStrings justify to the left, so for the sake of structuring, it's better to set the relative anchor to left
 			</OnShow>
 		</Scripts>
 	</EditBox>
@@ -769,6 +794,8 @@
 		<Scripts>
 			<OnLoad>
 				self:SetAutoFocus(false);
+				local slot = strsub(self:GetName(), 15, strfind(self:GetName(), "_weight")-1);
+				self:SetPoint('LEFT', _G["CEPGP_options_slot_" .. slot], 'RIGHT', 10, 0);
 			</OnLoad>
 			<OnEnterPressed>
 				self:ClearFocus();
@@ -783,10 +810,6 @@
 					self:SetText(SLOTWEIGHTS[slot]);
 				end
 			</OnEditFocusLost>
-			<OnShow>				
-				local slot = strsub(self:GetName(), 15, strfind(self:GetName(), "_weight")-1);
-				self:SetPoint('LEFT', _G["CEPGP_options_slot_" .. slot], 'RIGHT', 10, 0);
-			</OnShow>
 		</Scripts>
 	</EditBox>
 	
@@ -869,7 +892,7 @@
 					name = "Highlord Mograine";
 				end				
 				self:SetChecked(AUTOEP[L[name]]);
-				self:SetPoint('LEFT', target, 'RIGHT', 25, 0);
+				self:SetPoint('LEFT', target, 'RIGHT', 15, 0);
 			</OnShow>
 		</Scripts>
 	</CheckButton>

@@ -1,6 +1,6 @@
 local L = CEPGP_Locale:GetLocale("CEPGP")
 
-function CEPGP_handleComms(event, arg1, arg2)
+function CEPGP_handleComms(event, arg1, arg2, response)
 	--arg1 = message; arg2 = sender
 	if event == "CHAT_MSG_WHISPER" and string.lower(arg1) == string.lower(CEPGP_keyword) and CEPGP_distributing then
 		local duplicate = false;
@@ -47,8 +47,9 @@ function CEPGP_handleComms(event, arg1, arg2)
 								CEPGP_sendChatMessage(arg2 .. " (" .. class .. ") needs. (Non-guild member)", CEPGP_lootChannel);
 						end
 						if CEPGP_isML() == 0 then --If you are the master looter
-							CEPGP_SendAddonMsg("!need;"..arg2..";"..CEPGP_DistID, "RAID"); --!need;playername;itemID (of the item being distributed) is sent for sharing with raid assist
+							CEPGP_SendAddonMsg("!need;"..arg2..";"..CEPGP_DistID..";"..CEPGP_response_buttons[tonumber(response)][2], "RAID"); --!need;playername;itemID (of the item being distributed) is sent for sharing with raid assist
 							CEPGP_itemsTable[arg2] = {};
+							CEPGP_itemsTable[arg2] = {[3] = CEPGP_response_buttons[tonumber(response)][2]};
 						end
 					end
 					CEPGP_UpdateLootScrollBar();
@@ -81,8 +82,9 @@ function CEPGP_handleComms(event, arg1, arg2)
 						CEPGP_sendChatMessage(arg2 .. " (" .. class .. ") needs. (Non-guild member)", CEPGP_lootChannel);
 					end
 					if CEPGP_isML() == 0 then --If you are the master looter
-						CEPGP_SendAddonMsg("!need;"..arg2..";"..CEPGP_DistID, "RAID"); --!need;playername;itemID (of the item being distributed) is sent for sharing with raid assist
+						CEPGP_SendAddonMsg("!need;"..arg2..";"..CEPGP_DistID..";"..CEPGP_response_buttons[tonumber(response)][2], "RAID"); --!need;playername;itemID (of the item being distributed) is sent for sharing with raid assist
 						CEPGP_itemsTable[arg2] = {};
+						CEPGP_itemsTable[arg2][3] = CEPGP_response_buttons[tonumber(response)][2];
 					end
 				end
 				CEPGP_UpdateLootScrollBar();
@@ -361,6 +363,7 @@ function CEPGP_handleLoot(event, arg1, arg2)
 			CEPGP_SendAddonMsg("LootClosed;", "RAID");
 		end
 		CEPGP_distributing = false;
+		CEPGP_button_options_loot_gui:Enable();
 		CEPGP_distItemLink = nil;
 		_G["distributing"]:Hide();
 		if CEPGP_mode == "loot" then
@@ -404,9 +407,10 @@ function CEPGP_handleLoot(event, arg1, arg2)
 		if CEPGP_distributing and arg1 == CEPGP_lootSlot then --Confirms that an item is currently being distributed and that the item taken is the one in question
 			if CEPGP_distPlayer ~= "" and CEPGP_award then
 				CEPGP_distributing = false;
+				CEPGP_button_options_loot_gui:Enable();
 				if CEPGP_distGP then
-					SendChatMessage("Awarded " .. _G["CEPGP_distribute_item_name"]:GetText() .. " to ".. CEPGP_distPlayer .. " for " .. CEPGP_distribute_GP_value:GetText() .. " GP", CHANNEL, CEPGP_LANGUAGE);
-					CEPGP_addGP(CEPGP_distPlayer, CEPGP_distribute_GP_value:GetText(), CEPGP_DistID, CEPGP_distItemLink);
+					SendChatMessage("Awarded " .. _G["CEPGP_distribute_item_name"]:GetText() .. " to ".. CEPGP_distPlayer .. " for " .. CEPGP_distribute_GP_value:GetText()*CEPGP_rate .. " GP", CHANNEL, CEPGP_LANGUAGE);
+					CEPGP_addGP(CEPGP_distPlayer, CEPGP_distribute_GP_value:GetText()*CEPGP_rate, CEPGP_DistID, CEPGP_distItemLink);
 				else
 					SendChatMessage("Awarded " .. _G["CEPGP_distribute_item_name"]:GetText() .. " to ".. CEPGP_distPlayer .. " for free", CHANNEL, CEPGP_LANGUAGE);
 				end
@@ -417,6 +421,7 @@ function CEPGP_handleLoot(event, arg1, arg2)
 				CEPGP_loot:Show();
 			else
 				CEPGP_distributing = false;
+				CEPGP_button_options_loot_gui:Enable();
 				SendChatMessage(_G["CEPGP_distribute_item_name"]:GetText() .. " has been distributed without EPGP", CHANNEL, CEPGP_LANGUAGE);
 				CEPGP_distribute_popup:Hide();
 				CEPGP_distribute:Hide();

@@ -51,10 +51,15 @@ function CEPGP_IncAddonMsg(message, sender)
 		table.insert(CEPGP_responses, sender);
 		local itemID = args[3];
 		local itemID2 = args[4];
+		local response;
+		if CEPGP_itemsTable[sender] then
+			response = CEPGP_itemsTable[sender][3];
+		end
 		CEPGP_itemsTable[sender] = {};
 		CEPGP_itemsTable[sender] = {
 			[1] = itemID,
-			[2] = itemID2
+			[2] = itemID2,
+			[3] = response
 		};
 		CEPGP_UpdateLootScrollBar();
 	end
@@ -71,7 +76,6 @@ function CEPGP_IncAddonMsg(message, sender)
 					for x = 1, GetNumGroupMembers() do
 						if GetRaidRosterInfo(x) == sender then
 							_, _, _, _, CEPGP_groupVersion[i][3], CEPGP_groupVersion[i][4] = GetRaidRosterInfo(x);
-							print(CEPGP_groupVersion[i][4]);
 							break;
 						end
 					end
@@ -108,8 +112,10 @@ function CEPGP_IncAddonMsg(message, sender)
 		
 		
 		--Raid assists receiving !need responses in the format of !need;playername;itemID (of item being distributed)
-	elseif args[1] == "!need" and args[2] == UnitName("player") and sender ~= UnitName("player") then
+	elseif args[1] == "!need" and sender ~= UnitName("player") then
+		local response = args[4];
 		CEPGP_itemsTable[args[2]] = {};
+		CEPGP_itemsTable[args[2]][3] = response;
 		
 	elseif args[1] == "LootClosed" then
 		_G["CEPGP_respond"]:Hide();		
@@ -313,10 +319,12 @@ function CEPGP_IncAddonMsg(message, sender)
 	elseif args[1] == "CallItem" and sender ~= UnitName("player") then
 		local id = args[2];
 		local gp = args[3];
-		CEPGP_callItem(id, gp);
+		local buttons = {args[4], args[5], args[6], args[7]};
+		CEPGP_callItem(id, gp, buttons);
 		
-	elseif strfind(message, "MainSpec") then
-		CEPGP_handleComms("CHAT_MSG_WHISPER", CEPGP_keyword, sender);
+	elseif strfind(message, "MainSpec") or args[1] == "LootRsp" then
+		local response = args[2];
+		CEPGP_handleComms("CHAT_MSG_WHISPER", CEPGP_keyword, sender, response);
 		
 	
 	elseif args[1] == "CEPGP_TRAFFIC" then
