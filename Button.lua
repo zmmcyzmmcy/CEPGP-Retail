@@ -210,7 +210,8 @@ function CEPGP_ListButton_OnClick(obj)
 		CEPGP_context_popup_desc:SetText("Positive numbers decay | Negative numbers inflate");
 		CEPGP_context_amount:SetText("0");
 		CEPGP_context_popup_confirm:SetScript('OnClick', function()
-															if string.find(CEPGP_context_amount:GetText(), '^[0-9]+$') or string.find(CEPGP_context_amount:GetText(), '^[0-9]+.[0-9]+$') then
+															if string.find(CEPGP_context_amount:GetText(), '^[0-9]+$') or string.find(CEPGP_context_amount:GetText(), '^[0-9]+.[0-9]+$') or
+																string.find(CEPGP_context_amount:GetText(), '^-[0-9]+$') or string.find(CEPGP_context_amount:GetText(), '^-[0-9]+.[0-9]+$') then
 																PlaySound(799);
 																HideUIPanel(CEPGP_context_popup);
 																CEPGP_decay(tonumber(CEPGP_context_amount:GetText()), CEPGP_context_reason:GetText());
