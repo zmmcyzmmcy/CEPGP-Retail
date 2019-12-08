@@ -15,7 +15,6 @@ The addon is entirely GUI based and the frame is designed to only appear automat
 
 * Either /cepgp or /cep can be used as a valid command call
 * show - Shows the cepgp window
-* setdefaultchannel - Changes the default reporting channel. This is set to Guild by default
 * version - Allows you to check if each raid member is running the addon - and if so, what version of the addon they are using
 
 **Note: cepgp is a context sensitive addon and elements will be visible when they are relevent**
@@ -50,8 +49,5 @@ The following commands can be used to get EPGP reports.
 1. Download this addon 
 2. Extract it to ../Interface/AddOns/ 
 3. Rename the extracted folder from cepgp-retail-master to cepgp
-
-**Note:**
-If you get an error when adding an item to override for example (such as item not found), but you're sure you've spelled it correctly, then the item likely does not exist in your cache. This is a restriction in the API, items are cached as you see them in game. After seeing this item, you should not receive this error again (unless you delete your cache). This error should not prevent any functionality.
 
 Author: Alumian
