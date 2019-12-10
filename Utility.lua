@@ -42,6 +42,25 @@ function CEPGP_initialise()
 			EPVALS[k] = v;
 		end
 	end
+	EPVALS["Teremus the Devourer"] = nil; -- Obsolete entry and needs to be removed
+	AUTOEP["Teremus the Devourer"] = nil;
+	
+	local channels = {
+		[1] = L["Say"],
+		[2] = L["Yell"],
+		[3] = L["Party"],
+		[4] = L["Raid"],
+		[5] = L["Guild"],
+		[6] = L["Officer"],
+	};
+	
+	if not CEPGP_tContains(channels, CHANNEL) then
+		CHANNEL = channels[5];
+	end
+	if not CEPGP_tContains(channels, CEPGP_lootChannel) then
+		CEPGP_lootChannel = channels[4];
+	end
+	
 	-- Localize boss names on the config UI
 	local bossNames = _G["CEPGP_options_page_3_mc"].bosses
 	for k, entity in pairs(bossNames) do
@@ -90,6 +109,41 @@ function CEPGP_initialise()
 	if CEPGP_force_sync_rank == nil then
 		CEPGP_force_sync_rank = 1;
 	end
+	if #CEPGP_response_buttons < 6 then
+		CEPGP_response_buttons = {
+			[1] = {
+				true,
+				"Main Spec",
+				0
+			},
+			[2] = {
+				false,
+				"Off Spec",
+				0
+			},
+			[3] = {
+				false,
+				"Disenchant",
+				0
+			},
+			[4] = {
+				false,
+				"",
+				0
+			},
+			[5] = {
+				false,
+				"",
+				100
+			},
+			[6] = {
+				false,
+				"Pass",
+				100
+			}
+		};
+	end
+	
 	tinsert(UISpecialFrames, "CEPGP_frame");
 	tinsert(UISpecialFrames, "CEPGP_context_popup");
 	tinsert(UISpecialFrames, "CEPGP_save_guild_logs");
@@ -105,8 +159,6 @@ function CEPGP_initialise()
 	
 	if not CEPGP_notice then
 		CEPGP_notice_frame:Show();
-	elseif not CEPGP_1120_notice then
-		_G["CEPGP_update_notice"]:Show();
 	end
 	
 	if IsInRaid("player") and CEPGP_isML() == 0 then
@@ -132,12 +184,14 @@ function CEPGP_calcGP(link, quantity, id)
 		item:ContinueOnItemLoad(function()
 			name, link, rarity, ilvl, itemType, subType, _, _, slot, _, _, classID, subClassID = GetItemInfo(id);
 			for k, v in pairs(OVERRIDE_INDEX) do
-				if k == link then
+				local overrideID = CEPGP_getItemID(CEPGP_getItemString(k));
+				local temp = CEPGP_getItemID(CEPGP_getItemString(link));
+				if overrideID == temp then
 					return v;
 				end
 				local temp = string.lower(string.gsub(name, " ", ""));
 				k = string.lower(string.gsub(k, " ", ""));
-				if string.lower(temp) == string.lower(k) then
+				if temp == k then
 					return v;
 				end
 			end
@@ -180,7 +234,9 @@ function CEPGP_calcGP(link, quantity, id)
 	else
 		if not ilvl then ilvl = 0; end
 		for k, v in pairs(OVERRIDE_INDEX) do
-			if k == link then
+			local overrideID = CEPGP_getItemID(CEPGP_getItemString(k));
+			local temp = CEPGP_getItemID(CEPGP_getItemString(link));
+			if overrideID == temp then
 				return v;
 			end
 			local temp = string.lower(string.gsub(name, " ", ""));
@@ -226,7 +282,7 @@ function CEPGP_calcGP(link, quantity, id)
 end
 
 function CEPGP_addGPTooltip(self)
-	if not CEPPG_gp_tooltips or not self:GetItem() or self:GetItem() == nil or self:GetItem() == "" then return; end
+	if not CEPGP_gp_tooltips or not self:GetItem() or self:GetItem() == nil or self:GetItem() == "" then return; end
 	local _, link = self:GetItem();
 	local id = CEPGP_getItemID(CEPGP_getItemString(link));
 	if not CEPGP_itemExists(tonumber(id)) then return; end
@@ -245,7 +301,7 @@ function CEPGP_addGPTooltip(self)
 end
 
 function CEPGP_addGPHyperlink(self, iString)
-	if not string.find(iString, "item:") or not CEPPG_gp_tooltips then return; end
+	if not string.find(iString, "item:") or not CEPGP_gp_tooltips then return; end
 	local id = CEPGP_getItemID(iString);
 	local name = GetItemInfo(id);
 	if not name and CEPGP_itemExists(tonumber(id)) then
@@ -445,17 +501,19 @@ function CEPGP_rosterUpdate(event)
 		local numGuild = GetNumGuildMembers();
 		CEPGP_roster = {};
 		if CanEditOfficerNote() then
-			ShowUIPanel(CEPGP_guild_add_EP);
-			ShowUIPanel(CEPGP_guild_decay);
-			ShowUIPanel(CEPGP_guild_reset);
-			ShowUIPanel(CEPGP_raid_add_EP);
-			ShowUIPanel(CEPGP_button_guild_restore);
+			CEPGP_guild_add_EP:Show();
+			CEPGP_guild_decay:Show();
+			CEPGP_guild_reset:Show();
+			CEPGP_raid_add_EP:Show();
+			CEPGP_button_guild_restore:Show();
+			CEPGP_button_guild_import:Show();
 		else --[[ Hides context sensitive options if player cannot edit officer notes ]]--
-			HideUIPanel(CEPGP_guild_add_EP);
-			HideUIPanel(CEPGP_guild_decay);
-			HideUIPanel(CEPGP_guild_reset);
-			HideUIPanel(CEPGP_raid_add_EP);
-			HideUIPanel(CEPGP_button_guild_restore);
+			CEPGP_guild_add_EP:Hide();
+			CEPGP_guild_decay:Hide();
+			CEPGP_guild_reset:Hide();
+			CEPGP_raid_add_EP:Hide();
+			CEPGP_button_guild_restore:Hide();
+			CEPGP_button_guild_import:Hide();
 		end
 		for i = 1, numGuild do
 			local name, rank, rankIndex, _, class, _, _, officerNote, online, _, classFileName = GetGuildRosterInfo(i);
@@ -525,7 +583,9 @@ function CEPGP_rosterUpdate(event)
 				for k, v in ipairs(CEPGP_standbyRoster) do
 					if v[1] == name then
 						table.remove(CEPGP_standbyRoster, k); --Removes player from standby list if they have joined the raid
-						CEPGP_SendAddonMsg("StandbyRemoved;" .. name .. ";You have been removed from the standby list because you have joined the raid.", "RAID");
+						if CEPGP_isML() == 0 then
+							CEPGP_SendAddonMsg("StandbyRemoved;" .. name .. ";You have been removed from the standby list because you have joined the raid.", "RAID");
+						end
 						CEPGP_UpdateStandbyScrollBar();
 					end
 				end
@@ -654,22 +714,6 @@ function CEPGP_standardiseString(str)
 	return result;
 end
 
-function CEPGP_split(str, delim, iters) --String to be split, delimiter, number of iterations
-	local frags = {};
-	local remainder = str;
-	local count = 1;
-	for i = 1, iters+1 do
-		if string.find(remainder, delim) then
-			frags[count] = string.sub(remainder, 1, string.find(remainder, delim)-1);
-			remainder = string.sub(remainder, string.find(remainder, delim)+1, string.len(remainder));
-		else
-			frags[count] = string.sub(remainder, 1, string.len(remainder));
-		end
-		count = count + 1;
-	end
-	return frags;
-end
-
 function CEPGP_toggleStandbyRanks(show)
 	if show and CEPGP_ntgetn(STANDBYRANKS) > 0 then
 		for i = 1, 10 do
@@ -771,99 +815,28 @@ end
 
 function CEPGP_getEPGP(offNote, index, name)
 	if not name then index = CEPGP_nameToIndex(name); end
-	--if not index then return 0, 1; end --Happens when character logs initiailly
-	if offNote ~= "" then
-		if not CEPGP_checkEPGP(offNote) then
-			if not index then return 0, tonumber(BASEGP); end
-			local EP, GP;
-			--Error with player's EPGP has been detected and will attempt to be salvaged
-			if string.find(offNote, '^[0-9]+,') then --EP is assumed in tact
-				if string.find(offNote, ',[0-9]+') then
-					EP = tonumber(strsub(offNote, 1, strfind(offNote, ",")-1));
-					GP = strsub(offNote, string.find(offNote, ',[0-9]+')+1, string.find(offNote, '[^0-9,]')-1);
-					if CanEditOfficerNote() then
-						--GuildRosterSetOfficerNote(index, EP .. "," .. GP);
-						CEPGP_print("An error was found with " .. name .. "'s GP. Their EPGP has been salvaged as " .. EP .. "," .. GP .. ". Please confirm if this is correct and modify the officer note if required.");
-					end
-					return EP,GP;
-					
-				elseif string.find(offNote, '[0-9]+$') then
-					EP = tonumber(strsub(offNote, 1, strfind(offNote, ",")-1));
-					GP = strsub(offNote, string.find(offNote, '[0-9]+$'), string.len(offNote));
-					if CanEditOfficerNote() then
-						--GuildRosterSetOfficerNote(index, EP .. "," .. GP);
-						CEPGP_print("An error was found with " .. name .. "'s GP. Their EPGP has been salvaged as " .. EP .. "," .. GP .. ". Please confirm if this is correct and modify the officer note if required.");
-					end
-					return EP,GP;
-					
-				else
-					EP = tonumber(strsub(offNote, 1, strfind(offNote, ",")-1));
-					if CanEditOfficerNote() then
-						--GuildRosterSetOfficerNote(index, EP .. "," .. BASEGP);
-						CEPGP_print("An error was found with " .. name .. "'s GP. Their EP has been retained as " .. EP .. " but their GP will need to be manually set if known.");
-					end
-					return EP, BASEGP;
-				end
-				
-				return EP, BASEGP;
-			elseif string.find(offNote, ',[0-9]+$') then --GP is assumed in tact
-				GP = tonumber(strsub(offNote, strfind(offNote, ",")+1, string.len(offNote)));
-				
-				if string.find(offNote, '[^0-9]+,[0-9]+$') then --EP might still be intact, but characters might be padding between EP and the comma
-					EP = strsub(offNote, 1, string.find(offNote, '[^0-9]+,')-1);
-					if CanEditOfficerNote() then
-						--GuildRosterSetOfficerNote(index, EP .. "," .. GP);
-						CEPGP_print("An error was found with " .. name .. "'s EP. Their EPGP has been salvaged as " .. EP .. "," .. GP .. ". Please confirm if this is correct and modify the officer note if required.");
-					end
-					return EP, GP;
-					
-				elseif string.find(offNote, '^[^0-9]+[0-9]+,[0-9]+$') then --or pheraps the error is at the start of the string?
-					EP = strsub(offNote, string.find(offNote, '[0-9]+,'), string.find(offNote, ',[0-9]+$')-1);
-					if CanEditOfficerNote() then
-						--GuildRosterSetOfficerNote(index, EP .. "," .. GP);
-						CEPGP_print("An error was found with " .. name .. "'s EP. Their EPGP has been salvaged as " .. EP .. "," .. GP .. ". Please confirm if this is correct and modify the officer note if required.");
-					end
-					return EP, GP;
-					
-				else --EP cannot be salvaged
-					if CanEditOfficerNote() then
-						--GuildRosterSetOfficerNote(index, "0," .. GP);
-						CEPGP_print("An error was found with " .. name .. "'s EP. Their GP has been retained as " .. GP .. " but their EP will need to be manually set if known. For now, their EP has defaulted to 0.");
-					end
-					return 0, GP;
-				end
-			else --Neither are in tact
-				--GuildRosterSetOfficerNote(index, "0," .. BASEGP);
-				return 0, BASEGP;
-			end
-		end
-	end
 	local EP, GP = nil;
 	
-	if offNote == "" then --Click here to set an officer note qualifies as blank, also occurs if the officer notes are not visible
-		return 0, tonumber(BASEGP);
+	if not CEPGP_checkEPGP(offNote) then
+		return 0, BASEGP;
+	else
+		EP = tonumber(strsub(offNote, 1, strfind(offNote, ",")-1));
+		GP = tonumber(strsub(offNote, strfind(offNote, ",")+1, string.len(offNote)));
+		return EP, GP;
 	end
-	EP = tonumber(strsub(offNote, 1, strfind(offNote, ",")-1));
-	GP = tonumber(strsub(offNote, strfind(offNote, ",")+1, string.len(offNote)));
-	return EP, GP;
 end
 
 function CEPGP_checkEPGP(note)
-	--if not note then return; end
-	if string.find(note, '[^0-9.,-]') then
+	if string.find(note, '[^0-9,-]') or #note == 0 then
 		return false;
 	end
-	if string.find(note, '^[0-9]+,[0-9]+$') or string.find(note, '^[0-9]+.[0-9]+,[0-9]+.[0-9]+$') or
-		string.find(note, '^[0-9]+,[0-9]+.[0-9]+$') or string.find(note, '^[0-9]+.[0-9]+,[0-9]+$') then --EPGP is positive
+	if string.find(note, '^[0-9]+,[0-9]+$') then --EPGP is positive
 		return true;
-	elseif string.find(note, '^%-[0-9]+,[0-9]+$') or string.find(note, '^%-[0-9]+.[0-9]+,[0-9]+.[0-9]+$') or
-		string.find(note, '^%-[0-9]+,[0-9]+.[0-9]+$') or string.find(note, '^%-[0-9]+.[0-9]+,[0-9]+$') then --EP is negative
+	elseif string.find(note, '^%-[0-9]+,[0-9]+$') then --EP is negative
 		return true;
-	elseif string.find(note, '^[0-9]+,%-[0-9]+$') or string.find(note, '^[0-9]+.[0-9]+,%-[0-9]+.[0-9]+$') or
-		string.find(note, '^[0-9]+,%-[0-9]+.[0-9]+$') or string.find(note, '^[0-9]+.[0-9]+,%-[0-9]+$') then --GP is negative
+	elseif string.find(note, '^[0-9]+,%-[0-9]+$') then --GP is negative
 		return true;
-	elseif string.find(note, '^%-[0-9]+,%-[0-9]+$') or string.find(note, '^%-[0-9]+.[0-9]+,%-[0-9]+.[0-9]+$') or
-		string.find(note, '^%-[0-9]+,%-[0-9]+.[0-9]+$') or string.find(note, '^%-[0-9]+.[0-9]+,%-[0-9]+$') then --EPGP is negative
+	elseif string.find(note, '^%-[0-9]+,%-[0-9]+$') then --EPGP is negative
 		return true;
 	else
 		return false;
@@ -880,7 +853,7 @@ function CEPGP_getItemString(link)
 end
 
 function CEPGP_getItemID(iString)
-	if not iString then
+	if not iString or not string.find(iString, "item:") then
 		return nil;
 	end
 	local itemString = string.sub(iString, 6, string.len(iString)-1)--"^[%-?%d:]+");
@@ -944,6 +917,8 @@ function CEPGP_inOverride(itemName)
 	for k, _ in pairs(OVERRIDE_INDEX) do
 		if itemName == string.gsub(string.gsub(string.gsub(string.lower(k), " ", ""), "'", ""), ",", "") then
 			return true;
+		elseif string.find(k, itemName) then
+			return true;
 		end
 	end
 	return false;
@@ -953,13 +928,17 @@ function CEPGP_updateOverride(id)
 	if not id then return; end
 	id = tonumber(id);
 	local name, iString = GetItemInfo(id);
+	local replaced = false;
 	for item, _ in pairs(OVERRIDE_INDEX) do
 		if string.lower(name) == string.lower(item) then
-			OVERRIDE_INDEX[iString] = OVERRIDE_INDEX[name];
-			OVERRIDE_INDEX[item] = nil;
-			CEPGP_UpdateOverrideScrollBar();
-			return;
+			OVERRIDE_INDEX[iString] = OVERRIDE_INDEX[item];
+			table.remove(OVERRIDE_INDEX, item);
+			replaced = true;
+			break;
 		end
+	end
+	if replaced then
+		CEPGP_UpdateOverrideScrollBar();
 	end
 end
 
@@ -1061,6 +1040,63 @@ function CEPGP_tSort(t, index)
 		end
 	end
 	return t2;
+end
+
+function CEPGP_sortDistList(list)
+	local temp = {
+		[1] = {},
+		[2] = {},
+		[3] = {},
+		[4] = {},
+		[5] = {},
+		[6] = {}
+	};
+	for i = 1, #list do
+		local index = tonumber(list[i][11]);
+		if not temp[index] then temp[index] = {}; end
+		temp[index][#temp[index]+1] = {	-- Response Index
+			[1] = list[i][1],
+			[2] = list[i][2],
+			[3] = list[i][3],
+			[4] = list[i][4],
+			[5] = list[i][5],
+			[6] = list[i][6],
+			[7] = list[i][7],
+			[8] = list[i][8],
+			[9] = list[i][9],
+			[10] = list[i][10]
+		}
+	end
+	for i = 1, 6 do
+		for x = 1, #temp[i] do
+			for z = x+1, #temp[i] do
+				if temp[i][x][7] < temp[i][z][7] then
+					local v = temp[i][x];
+					temp[i][x] = temp[i][z];
+					temp[i][z] = v;
+				end
+			end
+		end
+	end
+	local result = {};
+	for i = 1, 6 do
+		for x = 1, #temp[i]	do
+			result[#result+1] = {
+				[1] = temp[i][x][1],
+				[2] = temp[i][x][2],
+				[3] = temp[i][x][3],
+				[4] = temp[i][x][4],
+				[5] = temp[i][x][5],
+				[6] = temp[i][x][6],
+				[7] = temp[i][x][7],
+				[8] = temp[i][x][8],
+				[9] = temp[i][x][9],
+				[10] = temp[i][x][10],
+				[11] = i
+			};
+		end
+	end
+	return result;
 end
 
 function CEPGP_ntgetn(tbl)
@@ -1180,6 +1216,16 @@ function CEPGP_button_options_OnClick()
 		_G["CEPGP_options_keyword"]:Show();
 		_G["CEPGP_options_keyword_edit"]:Show();
 	end
+	if CEPGP_show_passes then
+		CEPGP_options_show_passes_check:SetChecked(true);
+	else
+		CEPGP_options_show_passes_check:SetChecked(false);
+	end
+	if CEPGP_PR_sort then
+		CEPGP_options_enforce_PR_sorting_check:SetChecked(true);
+	else
+		CEPGP_options_enforce_PR_sorting_check:SetChecked(false);
+	end
 	CEPGP_populateFrame();
 end
 
@@ -1290,7 +1336,7 @@ function CEPGP_getDebugInfo()
 	else
 		info = info .. "Full Raid Loot Visibility: false<br />\n";
 	end
-	if CEPPG_gp_tooltips then
+	if CEPGP_gp_tooltips then
 		info = info .. "GP on Tooltips: true<br />\n";
 	else
 		info = info .. "GP on Tooltips: false<br />\n";
@@ -1434,12 +1480,13 @@ function CEPGP_formatExport()
 	local temp = {};
 	local text = "";
 	for k, v in pairs(CEPGP_roster) do
+		local EP,GP = CEPGP_getEPGP(v[5]);
 		temp[#temp+1] = {
-			[1] = k; -- Player Name
-			[2] = v[2]; -- Class
-			[3] = v[3]; -- Guild Rank
-			[4] = v[5]; -- Officer Note (Doesn't need to be broken down into EP and GP separately)
-			[5] = v[6]; -- Priority
+			[1] = k, -- Player Name
+			[2] = v[2], -- Class
+			[3] = v[3], -- Guild Rank
+			[4] = EP .. "," .. GP, -- Officer Note, processed like this incase the officer note is blank
+			[5] = v[6] -- Priority
 		};
 	end
 	temp = CEPGP_tSort(temp, 1);
@@ -1456,8 +1503,14 @@ function CEPGP_formatExport()
 				text = text .. "," .. temp[i][3];
 			end
 			text = text .. "," .. temp[i][4];
-			text = text .. "," .. temp[i][5];
-			text = text .. "\n";
+			if CEPGP_export_PR_check:GetChecked() then
+				text = text .. "," .. temp[i][5];
+			end
+			if CEPGP_export_trailing_check:GetChecked() then
+				text = text .. ",\n";
+			else
+				text = text .. "\n";
+			end
 		end
 		_G["CEPGP_export_dump"]:SetText(text);
 		_G["CEPGP_export_dump"]:HighlightText();
@@ -1573,17 +1626,41 @@ function CEPGP_calcAttIntervals()
 	return week, fn, mon, twoMon, threeMon;
 end
 
-function CEPGP_callItem(id, gp, buttons)
+function CEPGP_callItem(id, gp, buttons, timeout)
 	if not id then return; end
 	id = tonumber(id); -- Must be in a numerical format
 	local name, link, _, _, _, _, _, _, _, tex, _, classID, subClassID = GetItemInfo(id);
 	local iString;
+	if tonumber(timeout) > 0 then
+		local call;
+		local timer = timeout-1;
+		CEPGP_respond_timeout_string:Show();
+		CEPGP_respond_timeout_string:SetText("Time Remaining: " .. timer);
+		local ticker = function()
+			if not CEPGP_respond:IsVisible() then
+				call._remainingIterations = 0;
+				return;
+			end
+			timer = timer - 1;
+			CEPGP_respond_timeout_string:SetText("Time Remaining: " .. timer);
+			if timer == 0 then
+				CEPGP_respond:Hide();
+				CEPGP_SendAddonMsg("LootRsp;5", "RAID");
+			end
+		end
+		call = C_Timer.NewTicker(1, function()
+			ticker();
+		end, timeout);
+	else
+		CEPGP_respond_timeout_string:Hide();
+	end
 	if not link and CEPGP_itemExists(id) then
 		local item = Item:CreateFromItemID(id);
 		item:ContinueOnItemLoad(function()
 				_, link, _, _, _, _, _, _, _, tex, _, classID, subClassID = GetItemInfo(id)
 				if not CEPGP_canEquip(GetItemSubClassInfo(classID, subClassID)) and CEPGP_auto_pass then
 					CEPGP_print("Cannot equip " .. link .. "|c006969FF. Passing on item.|r");
+					CEPGP_SendAddonMsg("LootRsp;5", "RAID");
 					return;
 				end
 				iString = CEPGP_getItemString(link);
@@ -1612,6 +1689,7 @@ function CEPGP_callItem(id, gp, buttons)
 	else
 		if not CEPGP_canEquip(GetItemSubClassInfo(classID, subClassID)) and CEPGP_auto_pass then
 			CEPGP_print("Cannot equip " .. link .. "|c006969FF. Passing on item.|r");
+			CEPGP_SendAddonMsg("LootRsp;5", "RAID");
 			return;
 		end
 		iString = CEPGP_getItemString(link);
@@ -1640,39 +1718,43 @@ function CEPGP_callItem(id, gp, buttons)
 end
 
 function CEPGP_checkVersion(message)
-	local build = string.sub(message, string.find(message, ";")+1); --The whole message, but bits get taken off to form the major, minor and build
-	build = string.sub(build, string.find(build, ";")+1);
-	local major = string.sub(build, 0, string.find(build, "%.")-1);
-	build = string.sub(build, string.len(major)+2);
-	local minor = string.sub(build, 0, string.find(build, "%.")-1);
-	build = string.sub(build, string.find(build, "%.")+1);
+	local temp = CEPGP_split(message, ";");
+	local args = CEPGP_split(temp[3], ".");
+	local version = {
+		major = tonumber(args[1]),
+		minor = tonumber(args[2]),
+		revision = tonumber(args[3]),
+		build = tonumber(args[4])
+	};
 	
 	--Current build information
-	local curBuild = CEPGP_VERSION;
-	local curMajor = string.sub(curBuild, 0, string.find(curBuild, "%.")-1);
-	curBuild = string.sub(curBuild, string.len(curMajor)+2);
-	local curMinor = string.sub(curBuild, 0, string.find(curBuild, "%.")-1);
-	curBuild = string.sub(curBuild, string.find(curBuild, "%.")+1);
+	local curBuild = CEPGP_split(CEPGP_VERSION, ".");
+	local current = {
+		major = tonumber(curBuild[1]),
+		minor = tonumber(curBuild[2]),
+		revision = tonumber(curBuild[3]),
+		build = tonumber(curBuild[4])
+	};
 	
-	outMessage = "Your addon is out of date. Version " .. major .. "." .. minor .. "." .. build .. " is now available for download at https://github.com/Alumian/CEPGP-Retail"
-	if not CEPGP_VERSION_NOTIFIED then
-		if tonumber(major) > tonumber(curMajor) then 
+	outMessage = "Your addon is out of date. Version " .. version.major .. "." .. version.minor .. "." .. version.revision .. " is now available for download at https://github.com/Alumian/CEPGP-Retail"
+	if not CEPGP_VERSION_NOTIFIED and version.build == "release" then
+		if version.major > current.major then 
 			CEPGP_print(outMessage);
 			CEPGP_VERSION_NOTIFIED = true;
-		elseif tonumber(major) == tonumber(curMajor) and tonumber(minor) > tonumber(curMinor) then
+		elseif version.major == current.major and version.minor > current.minor then
 			CEPGP_print(outMessage);
 			CEPGP_VERSION_NOTIFIED = true;
-		elseif tonumber(major) == tonumber(curMajor) and tonumber(minor) == tonumber(curMinor) and tonumber(build) > tonumber(curBuild) then
+		elseif version.major == current.major and version.minor == current.minor and version.revision > current.revision then
 			CEPGP_print(outMessage);
 			CEPGP_VERSION_NOTIFIED = true;
 		end
 	end
 end
 
-function CEPGP_split(msg)
+function CEPGP_split(msg, delim)
 	local args = {};
 	local count = 1;
-	for i in (msg .. ";"):gmatch("([^;]*);") do
+	for i in (msg .. delim):gmatch("([^"..delim.."]*)" .. delim) do
 		args[count] = i;
 		count = count + 1;
 	end
@@ -1697,25 +1779,177 @@ function CEPGP_itemExists(id)
 end
 
 function CEPGP_getReportChannel(channel)
-	local channels = {"SAY","YELL","PARTY","RAID","GUILD","OFFICER"};
-	for k, v in pairs(channels) do
+	local channels = {
+		[1] = L["Say"],
+		[2] = L["Yell"],
+		[3] = L["Party"],
+		[4] = L["Raid"],
+		[5] = L["Guild"],
+		[6] = L["Officer"],
+	};
+	for k, v in ipairs(channels) do
 		if string.upper(channel) == v then
 			return string.upper(channel);
 		end
 	end
-	for i = 4, C_ChatInfo.GetNumActiveChannels() do
-		if select(2, GetChannelName(i)) == channel then
-			return i;
-		end
-	end
-	CEPGP_print("Couldn't post to channel \"" .. channel .. "\". Please update your reporting channel in CEPGP options.");
 end
 
 function CEPGP_sendChatMessage(msg, channel)
 	if not msg then return; end
-	if tonumber(CEPGP_getReportChannel(channel)) then
-		SendChatMessage(msg, "CHANNEL", CEPGP_LANGUAGE, CEPGP_getReportChannel(channel));
+	SendChatMessage(msg, channel, CEPGP_LANGUAGE);
+end
+
+function CEPGP_toggleGPEdit(mode)
+	if mode then
+		CEPGP_options_coef_edit:Enable();
+		CEPGP_options_coef_2_edit:Enable();
+		CEPGP_options_mod_edit:Enable();
+		CEPGP_options_gp_base_edit:Enable();
+		CEPGP_options_min_EP_check:Enable();
+		CEPGP_options_min_EP_amount:Enable();
+		CEPGP_button_options_loot_gui:Enable();
+		CEPGP_options_response_gui_checkbox:Enable();
+		CEPGP_options_show_passes_check:Enable();
+		for k, v in pairs(SLOTWEIGHTS) do
+			if k ~= "ROBE" and k ~= "EXCEPTION" then
+				_G["CEPGP_options_" .. k .. "_weight"]:Enable();
+			end
+		end
 	else
-		SendChatMessage(msg, channel, CEPGP_LANGUAGE);
+		CEPGP_options_coef_edit:Disable();
+		CEPGP_options_coef_2_edit:Disable();
+		CEPGP_options_mod_edit:Disable();
+		CEPGP_options_gp_base_edit:Disable();
+		CEPGP_options_min_EP_check:Disable();
+		CEPGP_options_min_EP_amount:Disable();
+		CEPGP_button_options_loot_gui:Disable();
+		CEPGP_options_response_gui_checkbox:Disable();
+		CEPGP_options_show_passes_check:Disable();
+		for k, v in pairs(SLOTWEIGHTS) do
+			if k ~= "ROBE" and k ~= "EXCEPTION" then
+				_G["CEPGP_options_" .. k .. "_weight"]:Disable();
+			end
+		end
 	end
+end
+
+function CEPGP_saveStandings(name)
+	if RECORDS[name] == nil or (CEPGP_overwritelog and name == CEPGP_recordholder) then
+		RECORDS[name] = {};
+		SortGuildRoster(name);
+		for i = 1, GetNumGuildMembers(), 1 do
+			local _, _, _, _, _, _, _, oNote = GetGuildRosterInfo(i);
+			RECORDS[name][GetGuildRosterInfo(i)] = oNote;
+		end
+		if CEPGP_overwritelog then
+			CEPGP_print("Record overwritten [" .. name .. "]");
+			CEPGP_overwritelog = false;
+		else
+			CEPGP_print("Record saved [" .. name .. "]");
+		end
+		HideUIPanel(CEPGP_save_guild_logs);
+	else
+		CEPGP_print("Record [" .. name .. "] already exists. Click confirm again to overwrite");
+		CEPGP_recordholder = name;
+		CEPGP_overwritelog = true;
+	end
+end
+
+function CEPGP_importStandings()
+	local impString = CEPGP_import_dump:GetText();
+	local frags = CEPGP_split(impString, ",");
+	local output = _G["CEPGP_import_progress_dump"];
+	CEPGP_import_dump:Disable();
+	output:SetText("Checking import string...");
+	for i = 1, #frags, 3 do
+		local name, EP, GP;
+		name = frags[i];
+		if name then
+			name = string.gsub(string.gsub(name, "\n", ""), " ", "");
+			if #name == 0 or name == "" then
+				frags[#frags] = nil;
+				break;
+			end
+			EP = frags[i+1];
+			GP = frags[i+2];
+			if #name > 0 and #EP > 0 and #GP > 0 then
+				if string.find(name, '[0-9!@#$%^&*(),.?":{}|<>]') then
+					output:SetText(output:GetText() .. "\n|c00FF0000Error: Invalid name: " .. name .. ". Aborting.|r");
+					CEPGP_import_dump:Enable();
+					return;
+				end
+				if string.find(EP, '[^0-9]!@#$%^&*(),.?":{}|<>]') then
+					output:SetText(output:GetText() .. "\n|c00FF0000Error: Invalid EP for " .. name .. ". Aborting.|r");
+					CEPGP_import_dump:Enable();
+					return;
+				end
+				if string.find(GP, '[^0-9]!@#$%^&*(),.?":{}|<>]') then
+					output:SetText(output:GetText() .. "\n|c00FF0000Error: Invalid GP for " .. name .. ". Aborting.|r");
+					CEPGP_import_dump:Enable();
+					return;
+				end
+			else
+				if #name == 0 then
+					output:SetText(output:GetText() .. "\n|c00FF0000Error: Invalid name: " .. name .. ". Aborting.|r");
+					CEPGP_import_dump:Enable();
+					return;
+				elseif #EP == 0 then
+					output:SetText(output:GetText() .. "\n|c00FF0000Error: Invalid EP for " .. name .. ". Aborting.|r");
+					CEPGP_import_dump:Enable();
+					return;
+				else
+					output:SetText(output:GetText() .. "\n|c00FF0000Error: Invalid GP for " .. name .. ". Aborting.|r");
+					CEPGP_import_dump:Enable();
+					return;
+				end
+			end
+		end
+	end	
+	output:SetText(output:GetText() .. "\nImport string is valid.\nSaving guild record...");
+	local tStamp = date("%I:%M:%S%p, %a, %d %B %Y", time()) .. " (Backup)";
+	CEPGP_saveStandings(tStamp);
+	C_Timer.After(1, function()
+		output:SetText(output:GetText() .. "\nGuild record saved.\nApplying changes...");
+		CEPGP_ignoreUpdates = true;
+		CEPGP_SendAddonMsg("?IgnoreUpdates;true");
+		C_Timer.After(1, function()
+			for i = 1, #frags, 3 do
+				local index, name, EP, GP;
+				name = frags[i];
+				if name then
+					name = string.gsub(string.gsub(name, "\n", ""), " ", "");
+					if #name == 0 or name == "" then
+						frags[#frags] = nil;
+						break;
+					end
+					EP = frags[i+1];
+					GP = frags[i+2];
+					index = CEPGP_getIndex(name);
+					output:SetText(output:GetText() .. "\nProcessing record: " .. name);
+					GuildRosterSetOfficerNote(index, EP .. "," .. GP);
+					CEPGP_import_progress_scrollframe:SetVerticalScroll(CEPGP_import_progress_scrollframe:GetVerticalScroll()+12);
+				end
+			end
+			output:SetText(output:GetText() .. "\nImport complete.");
+			CEPGP_ignoreUpdates = false;
+			CEPGP_SendAddonMsg("?IgnoreUpdates;false");
+			CEPGP_import_dump:Enable();
+		end);
+	end);
+end
+
+function CEPGP_addPlugin(plugin)
+	if not plugin then return; end
+	for i = 1, GetNumAddOns() do
+		local name = GetAddOnInfo(i);
+		if name == plugin then
+			table.insert(CEPGP_plugins, plugin);
+			break;
+		end
+	end
+	if not CEPGP_tContains(CEPGP_plugins, plugin) then
+		CEPGP_print(plugin .. " couldn't be found. Plugin not loaded.", true);
+		return;
+	end
+	_G["CEPGP_button_options_plugins"]:Show();
 end

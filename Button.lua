@@ -1,3 +1,5 @@
+local L = CEPGP_Locale:GetLocale("CEPGP");
+
 function CEPGP_ListButton_OnClick(obj)
 	if strfind(obj, "CEPGP_guild_reset") then
 		CEPGP_context_popup_desc:SetPoint("TOP", CEPGP_context_popup_title, "BOTTOM", 0, -5);
@@ -13,11 +15,32 @@ function CEPGP_ListButton_OnClick(obj)
 	end
 	
 	if strfind(obj, "Delete") then
-		local name = _G["CEPGP_overrideButton" .. _G[obj]:GetParent():GetID() .. "item"]:GetText();
+		
+		local name = _G[_G[obj]:GetParent():GetName() .. "item"]:GetText();
 		OVERRIDE_INDEX[name] = nil;
 		CEPGP_print(name .. " |c006969FFremoved from the GP override list");
 		CEPGP_UpdateOverrideScrollBar();
 		return;
+	end
+	
+	if strfind(obj, "TrafficButton") and strfind(obj, "Remove") then
+		local id = string.sub(obj, 14, string.find(obj, "Remove")-1);
+		local frame = _G["TrafficButton" .. id];
+		if frame:GetAttribute("delete_confirm") == "true" then
+			table.remove(TRAFFIC, tonumber(id));
+			CEPGP_print("Traffic entry " .. id .. " purged.");
+			CEPGP_UpdateTrafficScrollBar();
+		else
+			CEPGP_print("You are attempting to purge the following entry:");
+			id = tonumber(id);
+			if TRAFFIC[id][8] and string.find(TRAFFIC[id][8], "item:") then -- If an item is associated with the log
+				CEPGP_print("Issuer: " .. TRAFFIC[id][2] .. ", Action: " .. TRAFFIC[id][3] .. ", Item: " .. TRAFFIC[id][8] .. " |c006969FF, Recipient: " .. TRAFFIC[id][1] .. "|r");
+			else
+				CEPGP_print("Issuer: " .. TRAFFIC[id][2] .. ", Action: " .. TRAFFIC[id][3] .. ", Recipient: " .. TRAFFIC[id][1]);
+			end
+			CEPGP_print("This action cannot be undone. To proceed, press the delete button again.");
+			frame:SetAttribute("delete_confirm", "true");
+		end
 	end
 	
 	if obj == "CEPGP_options_standby_ep_award" then
@@ -107,6 +130,7 @@ function CEPGP_ListButton_OnClick(obj)
 					[7] = math.floor((tonumber(EP)/tonumber(GP))*100)/100,
 					[8] = classFile
 				};
+				if CEPGP_standby_share then CEPGP_SendAddonMsg("StandbyListAdd;"..name..";"..class..";"..rank..";"..rIndex..";"..EP..";"..GP..";"..classFile, "RAID"); end
 			end
 		end
 		CEPGP_UpdateStandbyScrollBar();
@@ -124,17 +148,42 @@ function CEPGP_ListButton_OnClick(obj)
 	
 	--[[ Distribution Menu ]]--
 	if strfind(obj, "LootDistButton") then --A player in the distribution menu is clicked
-		local discount = CEPGP_response_buttons[_G[obj]:GetAttribute("response")][3];
-		local response = _G[obj]:GetAttribute("responseName");
+		local discount;
+		if _G[obj]:GetAttribute("response") then
+			discount = CEPGP_response_buttons[tonumber(_G[obj]:GetAttribute("response"))][3];
+			response = _G[obj]:GetAttribute("responseName");
+			CEPGP_distribute_popup:SetAttribute("responseName", response);
+			CEPGP_distribute_popup:SetAttribute("response", tonumber(_G[obj]:GetAttribute("response")));
+		else
+			discount = 0;
+			CEPGP_distribute_popup:SetAttribute("responseName", nil);
+			CEPGP_distribute_popup:SetAttribute("response", nil);
+		end
 		local gp = CEPGP_distribute_GP_value:GetText();
-		CEPGP_distribute_popup_gp_full:SetText("Give for " .. gp .. " GP");
-		CEPGP_distribute_popup_gp:SetText("Give for " .. math.floor(gp*(discount/100)) .. " GP");
+		local discGP = math.floor(gp*((100-discount)/100));
+		local player = _G[_G[obj]:GetName() .. "Info"]:GetText();
 		ShowUIPanel(CEPGP_distribute_popup);
-		CEPGP_distribute_popup_title:SetText(_G[_G[obj]:GetName() .. "Info"]:GetText() .. " responded with " .. response .. "\n" .. discount .. "% discount");
+		if _G[obj]:GetAttribute("response") then
+			CEPGP_distribute_popup_title:SetText(player .. " (" .. response .. ")");
+			CEPGP_distribute_popup_gp:Show();
+			CEPGP_distribute_popup_gp:SetText("Give for " .. discGP .. "\n(" .. response .. ")");
+			CEPGP_distribute_popup_gp_full:SetText("Give for " .. gp .. "\n(Full Price)");
+		else
+			CEPGP_distribute_popup_title:SetText(player);
+			CEPGP_distribute_popup_gp_full:SetText("Give for " .. gp .. "\n(Full Price)");
+			CEPGP_distribute_popup_gp:Hide();
+		end
 		CEPGP_distPlayer = _G[_G[obj]:GetName() .. "Info"]:GetText();
 		CEPGP_distribute_popup:SetID(CEPGP_distribute:GetID()); --CEPGP_distribute:GetID gets the ID of the LOOT SLOT. Not the player.
 		CEPGP_distribute_popup_gp:SetScript('OnClick', function()
-			CEPGP_rate = discount/100;
+			CEPGP_rate = (100-discount)/100;
+			CEPGP_distGP = true;
+			CEPGP_award = true;
+			PlaySound(799);
+			CEPGP_distribute_popup_give();
+		end);
+		CEPGP_distribute_popup_gp_full:SetScript('OnClick', function()
+			CEPGP_rate = 1;
 			CEPGP_distGP = true;
 			CEPGP_award = true;
 			PlaySound(799);
@@ -166,7 +215,7 @@ function CEPGP_ListButton_OnClick(obj)
 																if CEPGP_context_popup_EP_check:GetChecked() then
 																	CEPGP_addEP(name, tonumber(CEPGP_context_amount:GetText()), CEPGP_context_reason:GetText());
 																else
-																	CEPGP_addGP(name, tonumber(CEPGP_context_amount:GetText()), false, _, CEPGP_context_reason:GetText());
+																	CEPGP_addGP(name, tonumber(CEPGP_context_amount:GetText()), nil, nil, CEPGP_context_reason:GetText());
 																end
 															end
 														end);
@@ -268,7 +317,7 @@ function CEPGP_ListButton_OnClick(obj)
 																if CEPGP_context_popup_EP_check:GetChecked() then
 																	CEPGP_addEP(name, tonumber(CEPGP_context_amount:GetText()), CEPGP_context_reason:GetText());
 																else
-																	CEPGP_addGP(name, tonumber(CEPGP_context_amount:GetText()), _, _, CEPGP_context_reason:GetText());
+																	CEPGP_addGP(name, tonumber(CEPGP_context_amount:GetText()), nil, nil, CEPGP_context_reason:GetText());
 																end
 															end
 														end);
@@ -425,16 +474,13 @@ end
 		
 function CEPGP_defChannelDropdown(frame, level, menuList)
 	local channels = {
-		[1] = "Say",
-		[2] = "Yell",
-		[3] = "Party",
-		[4] = "Raid",
-		[5] = "Guild",
-		[6] = "Officer",
+		[1] = L["Say"],
+		[2] = L["Yell"],
+		[3] = L["Party"],
+		[4] = L["Raid"],
+		[5] = L["Guild"],
+		[6] = L["Officer"],
 	};
-	for i = 4, C_ChatInfo.GetNumActiveChannels() do
-		channels[i+3] = select(2, GetChannelName(i));
-	end
 	for index, value in ipairs(channels) do
 		local info = {
 			text = value,
@@ -462,16 +508,13 @@ end
 		
 function CEPGP_lootChannelDropdown(frame, level, menuList)
 	local channels = {
-		[1] = "Say",
-		[2] = "Yell",
-		[3] = "Party",
-		[4] = "Raid",
-		[5] = "Guild",
-		[6] = "Officer",
+		[1] = L["Say"],
+		[2] = L["Yell"],
+		[3] = L["Party"],
+		[4] = L["Raid"],
+		[5] = L["Guild"],
+		[6] = L["Officer"],
 	};
-	for i = 4, C_ChatInfo.GetNumActiveChannels() do
-		channels[i+3] = select(2, GetChannelName(i));
-	end
 	for index, value in ipairs(channels) do
 		local info = {
 			text = value,

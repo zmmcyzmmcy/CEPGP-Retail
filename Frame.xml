@@ -186,6 +186,20 @@
 							</OnClick>
 						</Scripts>
 					</Button>
+					<Button name="CEPGP_button_guild_import" inherits="GameMenuButtonTemplate" text="Import Standings">
+						<Size>
+							<AbsDimension x="100" y="22" />
+						</Size>
+						<Anchors>
+							<Anchor point="RIGHT" relativePoint="LEFT" relativeTo="CEPGP_button_guild_export" />
+						</Anchors>
+						<Scripts>
+							<OnClick>
+								PlaySound(799);
+								CEPGP_import:Show()
+							</OnClick>
+						</Scripts>
+					</Button>
 					<Button name="CEPGP_button_options_attendance" inherits="GameMenuButtonTemplate" text="Raid Attendance">
 						<Size>
 							<AbsDimension x="125" y="21" />
@@ -812,7 +826,7 @@
 						</Anchors>
 						<Scripts>
 							<OnClick>
-								CEPGP_setCriteria(4, "Loot");
+								CEPGP_setCriteria(11, "Loot");
 							</OnClick>
 						</Scripts>
 					</Button>
@@ -1057,6 +1071,7 @@
 										self:ClearFocus();
 									</OnEnterPressed>
 									<OnEditFocusLost>
+										self:HighlightText(0,0);
 										local value;
 										value = self:GetText();
 										if CEPGP_keyword == value then
@@ -1146,6 +1161,7 @@
 										CEPGP_options_coef_edit:ClearFocus();
 									</OnEnterPressed>
 									<OnEditFocusLost>
+										self:HighlightText(0,0);
 										local value = self:GetText();
 										if not CEPGP_isNumber(value) then
 											CEPGP_print("Base coefficient must contain numbers only", true);
@@ -1182,6 +1198,7 @@
 										self:ClearFocus();
 									</OnEnterPressed>
 									<OnEditFocusLost>
+										self:HighlightText(0,0);
 										local value = self:GetText();
 										if not CEPGP_isNumber(value) then
 											CEPGP_print("Mod coefficient must contain numbers only", true);
@@ -1211,6 +1228,7 @@
 										CEPGP_options_mod_edit:ClearFocus();
 									</OnEnterPressed>
 									<OnEditFocusLost>
+										self:HighlightText(0,0);
 										local value = self:GetText();
 										if not CEPGP_isNumber(value) then
 											CEPGP_print("GP modifier must contain numbers only", true);
@@ -1247,6 +1265,7 @@
 										CEPGP_options_gp_base_edit:ClearFocus();
 									</OnEnterPressed>
 									<OnEditFocusLost>
+										self:HighlightText(0,0);
 										local value = self:GetText();
 										if not CEPGP_isNumber(value) then
 											CEPGP_print("Base GP must contain numbers only", true);
@@ -1819,6 +1838,7 @@
 										self:ClearFocus();
 									</OnEnterPressed>
 									<OnEditFocusLost>
+										self:HighlightText(0,0);
 										local value = self:GetText();
 										if not CEPGP_isNumber(value) then
 											if string.find(self:GetText(), "%%") then
@@ -1963,6 +1983,7 @@
 										self:SetText(CEPGP_standby_whisper_msg);
 									</OnShow>
 									<OnEditFocusLost>
+										self:HighlightText(0,0);
 										local msg = tostring(self:GetText());
 										if msg == "" then
 											self:SetText(CEPGP_standby_whisper_msg);
@@ -2216,6 +2237,22 @@
 								</Anchor>
 							</Anchors>
 						</FontString>
+						<FontString name="CEPGP_options_show_passes" inherits="GameFontNormal" text="Show Passes in Loot Distribution: ">
+							<Color r="1" g="1" b="1" />
+							<Anchors>
+								<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_min_EP_text">
+									<AbsDimension x="0" y="-7" />
+								</Anchor>
+							</Anchors>
+						</FontString>
+						<FontString name="CEPGP_options_enforce_PR_sorting" inherits="GameFontNormal" text="Automate Sorting During Loot Distribution: ">
+							<Color r="1" g="1" b="1" />
+							<Anchors>
+								<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_show_passes">
+									<AbsDimension x="0" y="-7" />
+								</Anchor>
+							</Anchors>
+						</FontString>
 						<FontString name="CEPGP_options_force_sync" inherits="GameFontNormal" text="Allow Forced Synchronisation from Rank:">
 							<Color r="1" g="1" b="1"/>
 							<Anchors>
@@ -2319,6 +2356,66 @@
 							<OnEnter>
 								GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT");
 								GameTooltip:SetText("Loot Master Feature\nRequire players to have a certain amount of EP before their loot responses are recognised.");
+							</OnEnter>
+							<OnLeave>
+								GameTooltip:Hide();
+							</OnLeave>
+						</Scripts>
+					</CheckButton>
+					<CheckButton name="CEPGP_options_show_passes_check" inherits="UIOptionsCheckButtonTemplate">
+						<HitRectInsets>
+							<AbsInset left="0" right="0" top="0" bottom="0" />
+						</HitRectInsets>
+						<Anchors>
+							<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="CEPGP_options_show_passes">
+								<Offset>
+									<AbsDimension x="-5" y="0" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnClick>
+								if self:GetChecked() then
+									CEPGP_show_passes = true;
+									CEPGP_print("Now showing pass responses in loot distribution");
+								else
+									CEPGP_show_passes = false;
+									CEPGP_print("No longer showing pass responses in loot distribution");
+								end
+							</OnClick>
+							<OnEnter>
+								GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT");
+								GameTooltip:SetText("Loot Master Feature\nToggle whether or not you want players who pass on items to show up in the distribution window.");
+							</OnEnter>
+							<OnLeave>
+								GameTooltip:Hide();
+							</OnLeave>
+						</Scripts>
+					</CheckButton>
+					<CheckButton name="CEPGP_options_enforce_PR_sorting_check" inherits="UIOptionsCheckButtonTemplate">
+						<HitRectInsets>
+							<AbsInset left="0" right="0" top="0" bottom="0" />
+						</HitRectInsets>
+						<Anchors>
+							<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="CEPGP_options_enforce_PR_sorting">
+								<Offset>
+									<AbsDimension x="-5" y="0" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnClick>
+								if self:GetChecked() then
+									CEPGP_PR_sort = true;
+									CEPGP_print("Automated sorting for loot distribution enabled");
+								else
+									CEPGP_PR_sort = false;
+									CEPGP_print("Automated sorting for loot distribution disabled");
+								end
+							</OnClick>
+							<OnEnter>
+								GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT");
+								GameTooltip:SetText("Automatically sort by response and then by priority when distributing loot");
 							</OnEnter>
 							<OnLeave>
 								GameTooltip:Hide();
@@ -2585,10 +2682,10 @@
 						<Scripts>
 							<OnClick>
 								if self:GetChecked() then
-									CEPPG_gp_tooltips = true;
+									CEPGP_gp_tooltips = true;
 									CEPGP_print("Enabled GP values on tooltips.");
 								else
-									CEPPG_gp_tooltips = false;
+									CEPGP_gp_tooltips = false;
 									CEPGP_print("Disabled GP values on tooltips");
 								end
 							</OnClick>
@@ -2600,7 +2697,7 @@
 								GameTooltip:Hide();
 							</OnLeave>
 							<OnShow>
-								if CEPPG_gp_tooltips then
+								if CEPGP_gp_tooltips then
 									self:SetChecked(true);
 								else
 									self:SetChecked(false);
@@ -2608,7 +2705,7 @@
 							</OnShow>
 						</Scripts>
 					</CheckButton>
-					<CheckButton name="CEPGP_options_gp_tooltips_check" inherits="UIOptionsCheckButtonTemplate">
+					<CheckButton name="CEPGP_options_announcement_suppression_check" inherits="UIOptionsCheckButtonTemplate">
 						<HitRectInsets>
 							<AbsInset left="0" right="0" top="0" bottom="0" />
 						</HitRectInsets>
@@ -2659,8 +2756,7 @@
 						<Scripts>
 							<OnClick>
 								PlaySound(799);
-								CEPGP_SendAddonMsg("?forceSync", "GUILD");
-								CEPGP_print("Forced synchronisation with guild members");
+								CEPGP_IncAddonMsg("?forceSync", UnitName("player"));
 							</OnClick>
 							<OnEnter>
 								GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT");
@@ -2675,7 +2771,7 @@
 			</Frame>
 			<Frame name="CEPGP_options_page_3" inherits="CEPGPFrameTemplate">
 				<Size>
-					<AbsDimension x="580" y="445" />
+					<AbsDimension x="580" y="435" />
 				</Size>
 				<Frames>
 					<Button name="CEPGP_options_page_3_mc_button" inherits="GameMenuButtonTemplate" text="Molten Core / Onyxia">
@@ -2822,7 +2918,7 @@
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="TOPLEFT">
 											<Offset>
-												<AbsDimension x="20" y="0" />
+												<AbsDimension x="20" y="10" />
 											</Offset>
 										</Anchor>
 									</Anchors>
@@ -2968,17 +3064,17 @@
 						</Anchors>
 						<Layers>
 							<Layer level="OVERLAY">
-								<FontString name="CEPGP_options_Razorgore the Untamed_val" inherits="GameFontNormal" text="Razorgore the Untamed: ">
+								<FontString name="CEPGP_options_Razorgore the Untamed_val" inherits="GameFontNormal" text="Razorgore the Untamed ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="TOPLEFT">
 											<Offset>
-												<AbsDimension x="20" y="0" />
+												<AbsDimension x="20" y="10" />
 											</Offset>
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Vaelastrasz the Corrupt_val" inherits="GameFontNormal" text="Vaelastrasz the Corrupt: ">
+								<FontString name="CEPGP_options_Vaelastrasz the Corrupt_val" inherits="GameFontNormal" text="Vaelastrasz the Corrupt ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Razorgore the Untamed_val">
@@ -2988,7 +3084,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Broodlord Lashlayer_val" inherits="GameFontNormal" text="Broodlord Lashlayer: ">
+								<FontString name="CEPGP_options_Broodlord Lashlayer_val" inherits="GameFontNormal" text="Broodlord Lashlayer ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Vaelastrasz the Corrupt_val">
@@ -2998,7 +3094,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Firemaw_val" inherits="GameFontNormal" text="Firemaw: ">
+								<FontString name="CEPGP_options_Firemaw_val" inherits="GameFontNormal" text="Firemaw ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Broodlord Lashlayer_val">
@@ -3008,7 +3104,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Ebonroc_val" inherits="GameFontNormal" text="Ebonroc: ">
+								<FontString name="CEPGP_options_Ebonroc_val" inherits="GameFontNormal" text="Ebonroc ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Firemaw_val">
@@ -3018,7 +3114,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Flamegor_val" inherits="GameFontNormal" text="Flamegor: ">
+								<FontString name="CEPGP_options_Flamegor_val" inherits="GameFontNormal" text="Flamegor ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Ebonroc_val">
@@ -3028,7 +3124,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Chromaggus_val" inherits="GameFontNormal" text="Chromaggus: ">
+								<FontString name="CEPGP_options_Chromaggus_val" inherits="GameFontNormal" text="Chromaggus ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Flamegor_val">
@@ -3038,7 +3134,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Nefarian_val" inherits="GameFontNormal" text="Nefarian: ">
+								<FontString name="CEPGP_options_Nefarian_val" inherits="GameFontNormal" text="Nefarian ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Chromaggus_val">
@@ -3083,17 +3179,17 @@
 						</Anchors>
 						<Layers>
 							<Layer level="OVERLAY">
-								<FontString name="CEPGP_options_High Priest Venoxis_val" inherits="GameFontNormal" text="High Priest Venoxis: ">
+								<FontString name="CEPGP_options_High Priest Venoxis_val" inherits="GameFontNormal" text="High Priest Venoxis ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="TOPLEFT">
 											<Offset>
-												<AbsDimension x="20" y="0" />
+												<AbsDimension x="20" y="10" />
 											</Offset>
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_High Priestess Jeklik_val" inherits="GameFontNormal" text="High Priestess Jeklik: ">
+								<FontString name="CEPGP_options_High Priestess Jeklik_val" inherits="GameFontNormal" text="High Priestess Jeklik ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_High Priest Venoxis_val">
@@ -3103,7 +3199,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_High Priestess Mar'li_val" inherits="GameFontNormal" text="High Priestess Mar'li: ">
+								<FontString name="CEPGP_options_High Priestess Mar'li_val" inherits="GameFontNormal" text="High Priestess Mar'li ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_High Priestess Jeklik_val">
@@ -3113,7 +3209,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_High Priest Thekal_val" inherits="GameFontNormal" text="High Priest Thekal: ">
+								<FontString name="CEPGP_options_High Priest Thekal_val" inherits="GameFontNormal" text="High Priest Thekal ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_High Priestess Mar'li_val">
@@ -3123,7 +3219,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_High Priestess Arlokk_val" inherits="GameFontNormal" text="High Priestess Arlokk: ">
+								<FontString name="CEPGP_options_High Priestess Arlokk_val" inherits="GameFontNormal" text="High Priestess Arlokk ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_High Priest Thekal_val">
@@ -3133,7 +3229,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_The Edge of Madness_val" inherits="GameFontNormal" text="The Edge of Madness: ">
+								<FontString name="CEPGP_options_The Edge of Madness_val" inherits="GameFontNormal" text="The Edge of Madness ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_High Priestess Arlokk_val">
@@ -3143,7 +3239,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Bloodlord Mandokir_val" inherits="GameFontNormal" text="Bloodlord Mandokir: ">
+								<FontString name="CEPGP_options_Bloodlord Mandokir_val" inherits="GameFontNormal" text="Bloodlord Mandokir ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_The Edge of Madness_val">
@@ -3153,7 +3249,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Jin'do the Hexxer_val" inherits="GameFontNormal" text="Jin'do the Hexxer: ">
+								<FontString name="CEPGP_options_Jin'do the Hexxer_val" inherits="GameFontNormal" text="Jin'do the Hexxer ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Bloodlord Mandokir_val">
@@ -3163,7 +3259,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Gahz'ranka_val" inherits="GameFontNormal" text="Gahz'ranka: ">
+								<FontString name="CEPGP_options_Gahz'ranka_val" inherits="GameFontNormal" text="Gahz'ranka ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Jin'do the Hexxer_val">
@@ -3173,7 +3269,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Hakkar_val" inherits="GameFontNormal" text="Hakkar: ">
+								<FontString name="CEPGP_options_Hakkar_val" inherits="GameFontNormal" text="Hakkar ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Gahz'ranka_val">
@@ -3222,17 +3318,17 @@
 						</Anchors>
 						<Layers>
 							<Layer level="OVERLAY">
-								<FontString name="CEPGP_options_Kurinnaxx_val" inherits="GameFontNormal" text="Kurinnaxx: ">
+								<FontString name="CEPGP_options_Kurinnaxx_val" inherits="GameFontNormal" text="Kurinnaxx ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="TOPLEFT">
 											<Offset>
-												<AbsDimension x="20" y="0" />
+												<AbsDimension x="20" y="10" />
 											</Offset>
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_General Rajaxx_val" inherits="GameFontNormal" text="General Rajaxx: ">
+								<FontString name="CEPGP_options_General Rajaxx_val" inherits="GameFontNormal" text="General Rajaxx ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Kurinnaxx_val">
@@ -3242,7 +3338,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Moam_val" inherits="GameFontNormal" text="Moam: ">
+								<FontString name="CEPGP_options_Moam_val" inherits="GameFontNormal" text="Moam ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_General Rajaxx_val">
@@ -3252,7 +3348,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Buru the Gorger_val" inherits="GameFontNormal" text="Buru the Gorger: ">
+								<FontString name="CEPGP_options_Buru the Gorger_val" inherits="GameFontNormal" text="Buru the Gorger ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Moam_val">
@@ -3262,7 +3358,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Ayamiss the Hunter_val" inherits="GameFontNormal" text="Ayamiss the Hunter: ">
+								<FontString name="CEPGP_options_Ayamiss the Hunter_val" inherits="GameFontNormal" text="Ayamiss the Hunter ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Buru the Gorger_val">
@@ -3272,7 +3368,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Ossirian the Unscarred_val" inherits="GameFontNormal" text="Ossirian the Unscarred: ">
+								<FontString name="CEPGP_options_Ossirian the Unscarred_val" inherits="GameFontNormal" text="Ossirian the Unscarred ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Ayamiss the Hunter_val">
@@ -3313,17 +3409,17 @@
 						</Anchors>
 						<Layers>
 							<Layer level="OVERLAY">
-								<FontString name="CEPGP_options_The Prophet Skeram_val" inherits="GameFontNormal" text="The Prophet Skeram: ">
+								<FontString name="CEPGP_options_The Prophet Skeram_val" inherits="GameFontNormal" text="The Prophet Skeram ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="TOPLEFT">
 											<Offset>
-												<AbsDimension x="20" y="0" />
+												<AbsDimension x="20" y="10" />
 											</Offset>
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Battleguard Sartura_val" inherits="GameFontNormal" text="Battleguard Sartura: ">
+								<FontString name="CEPGP_options_Battleguard Sartura_val" inherits="GameFontNormal" text="Battleguard Sartura ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_The Prophet Skeram_val">
@@ -3333,7 +3429,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Fankriss the Unyielding_val" inherits="GameFontNormal" text="Fankriss the Unyielding: ">
+								<FontString name="CEPGP_options_Fankriss the Unyielding_val" inherits="GameFontNormal" text="Fankriss the Unyielding ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Battleguard Sartura_val">
@@ -3343,7 +3439,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Princess Huhuran_val" inherits="GameFontNormal" text="Princess Huhuran: ">
+								<FontString name="CEPGP_options_Princess Huhuran_val" inherits="GameFontNormal" text="Princess Huhuran ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Fankriss the Unyielding_val">
@@ -3353,7 +3449,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_The Bug Trio_val" inherits="GameFontNormal" text="The Bug Trio: ">
+								<FontString name="CEPGP_options_The Bug Trio_val" inherits="GameFontNormal" text="The Bug Trio ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Princess Huhuran_val">
@@ -3363,7 +3459,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Viscidus_val" inherits="GameFontNormal" text="Viscidus: ">
+								<FontString name="CEPGP_options_Viscidus_val" inherits="GameFontNormal" text="Viscidus ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_The Bug Trio_val">
@@ -3373,7 +3469,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Ouro_val" inherits="GameFontNormal" text="Ouro: ">
+								<FontString name="CEPGP_options_Ouro_val" inherits="GameFontNormal" text="Ouro ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Viscidus_val">
@@ -3383,7 +3479,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_The Twin Emperors_val" inherits="GameFontNormal" text="The Twin Emperors: ">
+								<FontString name="CEPGP_options_The Twin Emperors_val" inherits="GameFontNormal" text="The Twin Emperors ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Ouro_val">
@@ -3393,7 +3489,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_C'Thun_val" inherits="GameFontNormal" text="C'Thun: ">
+								<FontString name="CEPGP_options_C'Thun_val" inherits="GameFontNormal" text="C'Thun ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_The Twin Emperors_val">
@@ -3440,17 +3536,17 @@
 						</Anchors>
 						<Layers>
 							<Layer level="OVERLAY">
-								<FontString name="CEPGP_options_Anub'Rekhan_val" inherits="GameFontNormal" text="Anub'Rekhan: ">
+								<FontString name="CEPGP_options_Anub'Rekhan_val" inherits="GameFontNormal" text="Anub'Rekhan ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="TOPLEFT">
 											<Offset>
-												<AbsDimension x="20" y="0" />
+												<AbsDimension x="20" y="10" />
 											</Offset>
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Grand Widow Faerlina_val" inherits="GameFontNormal" text="Grand Widow Faerlina: ">
+								<FontString name="CEPGP_options_Grand Widow Faerlina_val" inherits="GameFontNormal" text="Grand Widow Faerlina ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Anub'Rekhan_val">
@@ -3460,7 +3556,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Maexxna_val" inherits="GameFontNormal" text="Maexxna: ">
+								<FontString name="CEPGP_options_Maexxna_val" inherits="GameFontNormal" text="Maexxna ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Grand Widow Faerlina_val">
@@ -3470,7 +3566,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Noth the Plaguebringer_val" inherits="GameFontNormal" text="Noth the Plaguebringer: ">
+								<FontString name="CEPGP_options_Noth the Plaguebringer_val" inherits="GameFontNormal" text="Noth the Plaguebringer ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Maexxna_val">
@@ -3480,7 +3576,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Heigan the Unclean_val" inherits="GameFontNormal" text="Heigan the Unclean: ">
+								<FontString name="CEPGP_options_Heigan the Unclean_val" inherits="GameFontNormal" text="Heigan the Unclean ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Noth the Plaguebringer_val">
@@ -3490,7 +3586,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Loatheb_val" inherits="GameFontNormal" text="Loatheb: ">
+								<FontString name="CEPGP_options_Loatheb_val" inherits="GameFontNormal" text="Loatheb ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Heigan the Unclean_val">
@@ -3500,7 +3596,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Instructor Razuvious_val" inherits="GameFontNormal" text="Instructor Razuvious: ">
+								<FontString name="CEPGP_options_Instructor Razuvious_val" inherits="GameFontNormal" text="Instructor Razuvious ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Loatheb_val">
@@ -3510,7 +3606,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Gothik the Harvester_val" inherits="GameFontNormal" text="Gothik the Harvester: ">
+								<FontString name="CEPGP_options_Gothik the Harvester_val" inherits="GameFontNormal" text="Gothik the Harvester ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Instructor Razuvious_val">
@@ -3520,7 +3616,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_The Four Horsemen_val" inherits="GameFontNormal" text="The Four Horsemen: ">
+								<FontString name="CEPGP_options_The Four Horsemen_val" inherits="GameFontNormal" text="The Four Horsemen ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Gothik the Harvester_val">
@@ -3530,7 +3626,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Patchwerk_val" inherits="GameFontNormal" text="Patchwerk: ">
+								<FontString name="CEPGP_options_Patchwerk_val" inherits="GameFontNormal" text="Patchwerk ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_The Four Horsemen_val">
@@ -3540,7 +3636,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Grobbulus_val" inherits="GameFontNormal" text="Grobbulus: ">
+								<FontString name="CEPGP_options_Grobbulus_val" inherits="GameFontNormal" text="Grobbulus ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Patchwerk_val">
@@ -3550,7 +3646,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Gluth_val" inherits="GameFontNormal" text="Gluth: ">
+								<FontString name="CEPGP_options_Gluth_val" inherits="GameFontNormal" text="Gluth ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Grobbulus_val">
@@ -3560,7 +3656,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Thaddius_val" inherits="GameFontNormal" text="Thaddius: ">
+								<FontString name="CEPGP_options_Thaddius_val" inherits="GameFontNormal" text="Thaddius ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Gluth_val">
@@ -3570,7 +3666,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Sapphiron_val" inherits="GameFontNormal" text="Sapphiron: ">
+								<FontString name="CEPGP_options_Sapphiron_val" inherits="GameFontNormal" text="Sapphiron ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Thaddius_val">
@@ -3580,7 +3676,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Kel'Thuzad_val" inherits="GameFontNormal" text="Kel'Thuzad: ">
+								<FontString name="CEPGP_options_Kel'Thuzad_val" inherits="GameFontNormal" text="Kel'Thuzad ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Sapphiron_val">
@@ -3639,27 +3735,27 @@
 						</Anchors>
 						<Layers>
 							<Layer level="OVERLAY">
-								<FontString name="CEPGP_options_Doom Lord Kazzak_val" inherits="GameFontNormal" text="Doom Lord Kazzak: ">
+								<FontString name="CEPGP_options_Lord Kazzak_val" inherits="GameFontNormal" text="Lord Kazzak ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="TOPLEFT">
 											<Offset>
-												<AbsDimension x="20" y="0" />
+												<AbsDimension x="20" y="10" />
 											</Offset>
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Azuregos_val" inherits="GameFontNormal" text="Azuregos: ">
+								<FontString name="CEPGP_options_Azuregos_val" inherits="GameFontNormal" text="Azuregos ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
-										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Doom Lord Kazzak_val">
+										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Lord Kazzak_val">
 											<Offset>
 												<AbsDimension x="0" y="-10" />
 											</Offset>
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Teremus the Devourer_val" inherits="GameFontNormal" text="Teremus the Devourer: ">
+								<FontString name="CEPGP_options_Emeriss_val" inherits="GameFontNormal" text="Emeriss ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Azuregos_val">
@@ -3669,17 +3765,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Emeriss_val" inherits="GameFontNormal" text="Emeriss: ">
-									<Color r="1" g="1" b="1"/>
-									<Anchors>
-										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Teremus the Devourer_val">
-											<Offset>
-												<AbsDimension x="0" y="-10" />
-											</Offset>
-										</Anchor>
-									</Anchors>
-								</FontString>
-								<FontString name="CEPGP_options_Lethon_val" inherits="GameFontNormal" text="Lethon: ">
+								<FontString name="CEPGP_options_Lethon_val" inherits="GameFontNormal" text="Lethon ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Emeriss_val">
@@ -3689,7 +3775,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Ysondre_val" inherits="GameFontNormal" text="Ysondre: ">
+								<FontString name="CEPGP_options_Ysondre_val" inherits="GameFontNormal" text="Ysondre ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Lethon_val">
@@ -3699,7 +3785,7 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
-								<FontString name="CEPGP_options_Taerar_val" inherits="GameFontNormal" text="Taerar: ">
+								<FontString name="CEPGP_options_Taerar_val" inherits="GameFontNormal" text="Taerar ">
 									<Color r="1" g="1" b="1"/>
 									<Anchors>
 										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Ysondre_val">
@@ -3709,20 +3795,28 @@
 										</Anchor>
 									</Anchors>
 								</FontString>
+								<FontString name="CEPGP_options_wb_notice" inherits="GameFontNormal" justifyH="LEFT" text="">
+									<Color r="1" g="1" b="1"/>
+									<Anchors>
+										<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="CEPGP_options_Taerar_val">
+											<Offset>
+												<AbsDimension x="0" y="-40" />
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
 							</Layer>
 						</Layers>
 						<Frames>
-							<CheckButton name="CEPGP_options_Doom Lord Kazzak_auto_check" inherits="AutoAwardEPCheckBox" />
+							<CheckButton name="CEPGP_options_Lord Kazzak_auto_check" inherits="AutoAwardEPCheckBox" />
 							<CheckButton name="CEPGP_options_Azuregos_auto_check" inherits="AutoAwardEPCheckBox" />
-							<CheckButton name="CEPGP_options_Teremus the Devourer_auto_check" inherits="AutoAwardEPCheckBox" />
 							<CheckButton name="CEPGP_options_Emeriss_auto_check" inherits="AutoAwardEPCheckBox" />
 							<CheckButton name="CEPGP_options_Lethon_auto_check" inherits="AutoAwardEPCheckBox" />
 							<CheckButton name="CEPGP_options_Ysondre_auto_check" inherits="AutoAwardEPCheckBox" />
 							<CheckButton name="CEPGP_options_Taerar_auto_check" inherits="AutoAwardEPCheckBox" />
 							
-							<EditBox name="CEPGP_options_Doom Lord Kazzak_EP_value" inherits="epValInputBoxTemplate" />
+							<EditBox name="CEPGP_options_Lord Kazzak_EP_value" inherits="epValInputBoxTemplate" />
 							<EditBox name="CEPGP_options_Azuregos_EP_value" inherits="epValInputBoxTemplate" />
-							<EditBox name="CEPGP_options_Teremus the Devourer_EP_value" inherits="epValInputBoxTemplate" />
 							<EditBox name="CEPGP_options_Emeriss_EP_value" inherits="epValInputBoxTemplate" />
 							<EditBox name="CEPGP_options_Lethon_EP_value" inherits="epValInputBoxTemplate" />
 							<EditBox name="CEPGP_options_Ysondre_EP_value" inherits="epValInputBoxTemplate" />
@@ -3799,6 +3893,27 @@
 				<Scripts>
 					<OnShow>
 						CEPGP_toggleBossConfigFrame("CEPGP_options_page_3_mc");
+						local L = CEPGP_Locale:GetLocale("CEPGP");
+						for k, v in pairs(L) do
+							if k ~= v then
+								if _G["CEPGP_options_" .. v .. "_val"] then
+									_G["CEPGP_options_" .. v .. "_val"]:SetText(k);
+								end
+							end
+						end
+						_G["CEPGP_options_Lord Kazzak_auto_check"]:SetChecked(false);
+						_G["CEPGP_options_Lord Kazzak_auto_check"]:Disable();
+						CEPGP_options_Azuregos_auto_check:SetChecked(false);
+						CEPGP_options_Azuregos_auto_check:Disable();
+						CEPGP_options_Emeriss_auto_check:SetChecked(false);
+						CEPGP_options_Emeriss_auto_check:Disable();
+						CEPGP_options_Lethon_auto_check:SetChecked(false);
+						CEPGP_options_Lethon_auto_check:Disable();
+						CEPGP_options_Ysondre_auto_check:SetChecked(false);
+						CEPGP_options_Ysondre_auto_check:Disable();
+						CEPGP_options_Taerar_auto_check:SetChecked(false);
+						CEPGP_options_Taerar_auto_check:Disable();
+						CEPGP_options_wb_notice:SetText(L["Notice: Auto award for world bosses has been disabled.\nIt has been replaced by a popup confirming if you would like to award EP to the raid."]);	
 					</OnShow>
 				</Scripts>
 			</Frame>
@@ -4031,6 +4146,7 @@
 				self:RegisterEvent("PARTY_LOOT_METHOD_CHANGED");
 				self:RegisterEvent("CHAT_MSG_BN_WHISPER");
 				self:RegisterEvent("GET_ITEM_INFO_RECEIVED");
+				self:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED");
 			</OnLoad>
 			<OnMouseDown>
 				self:StartMoving();
@@ -4271,6 +4387,10 @@
 		<Anchors>
 			<Anchor point="CENTER"/>
 		</Anchors>
+		<Attributes>
+			<Attribute name="response" type="int" value="0" />
+			<Attribute name="responseName" type="string" value=""/>
+		</Attributes>
 		<Backdrop bgFile="Interface\DialogFrame\UI-DialogBox-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
 			<BackgroundInsets>
 				<AbsInset left="11" right="12" top="12" bottom="11"/>
@@ -4337,26 +4457,26 @@
 					</OnClick>
 				</Scripts>
 			</Button>
-			<Button name="CEPGP_distribute_popup_gp" inherits="GameMenuButtonTemplate" text="Give for GP">
+			<Button name="CEPGP_distribute_popup_gp" inherits="GameMenuButtonTemplate" text="Discount">
 				<Size>
-					<AbsDimension x="110" y="30"/>
+					<AbsDimension x="110" y="40"/>
 				</Size>
 				<Anchors>
-					<Anchor point="BOTTOMLEFT">
+					<Anchor point="BOTTOM" relativePoint="BOTTOM">
 						<Offset>
-							<AbsDimension x="7.5" y="10"/>
+							<AbsDimension x="0" y="10"/>
 					</Offset>
 				</Anchor>
 			</Anchors>
 			</Button>
 			<Button name="CEPGP_distribute_popup_gp_full" inherits="GameMenuButtonTemplate" text="Give for Full Price">
 				<Size>
-					<AbsDimension x="110" y="30"/>
+					<AbsDimension x="110" y="40"/>
 				</Size>
 				<Anchors>
-					<Anchor point="BOTTOM" relativePoint="BOTTOM">
+					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT">
 						<Offset>
-							<AbsDimension x="0" y="10"/>
+							<AbsDimension x="7.5" y="10"/>
 					</Offset>
 				</Anchor>
 			</Anchors>
@@ -4370,12 +4490,12 @@
 					</OnClick>
 				</Scripts>
 			</Button>
-			<Button name="CEPGP_distribute_popup_free" inherits="GameMenuButtonTemplate" text="Give for Free">
+			<Button name="CEPGP_distribute_popup_free" inherits="GameMenuButtonTemplate">
 				<Size>
-					<AbsDimension x="110" y="30"/>
+					<AbsDimension x="110" y="40"/>
 				</Size>
 				<Anchors>
-					<Anchor point="BOTTOMRIGHT">
+					<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT">
 						<Offset>
 							<AbsDimension x="-7.5" y="10"/>
 					</Offset>
@@ -4388,6 +4508,9 @@
 						PlaySound(799);
 						CEPGP_distribute_popup_give();
 					</OnClick>
+					<OnLoad>
+						self:SetText("Give for\nFree");
+					</OnLoad>
 				</Scripts>
 			</Button>
 		</Frames>
@@ -4738,27 +4861,7 @@
 				<Scripts>
 					<OnClick>
 						PlaySound(799);
-						local name = CEPGP_guild_log_save_name:GetText();
-						CEPGP_updateGuild();
-						if RECORDS[name] == nil or (CEPGP_overwritelog and name == CEPGP_recordholder) then
-							RECORDS[name] = {};
-							SortGuildRoster(name);
-							for i = 1, GetNumGuildMembers(), 1 do
-								local _, _, _, _, _, _, _, oNote = GetGuildRosterInfo(i);
-								RECORDS[name][GetGuildRosterInfo(i)] = oNote;
-							end
-							if CEPGP_overwritelog then
-								CEPGP_print("Record overwritten [" .. name .. "]");
-								CEPGP_overwritelog = false;
-							else
-								CEPGP_print("Record saved [" .. name .. "]");
-							end
-							HideUIPanel(CEPGP_save_guild_logs);
-						else
-							CEPGP_print("Record [" .. name .. "] already exists. Click confirm again to overwrite");
-							CEPGP_recordholder = name;
-							CEPGP_overwritelog = true;
-						end
+						CEPGP_saveStandings(CEPGP_guild_log_save_name:GetText());
 					</OnClick>
 					<OnHide>
 						CEPGP_overwritelog = false;
@@ -5360,6 +5463,8 @@
 						end
 						if CEPGP_override_item_name:GetText() ~= "" then
 							local item = CEPGP_standardiseString(CEPGP_override_item_name:GetText());
+							local _, iString = GetItemInfo(item);
+							if iString then item = iString; end
 							if (OVERRIDE_INDEX[item] and CEPGP_override_confirm) or not OVERRIDE_INDEX[item] then
 								OVERRIDE_INDEX[item] = gp;
 								CEPGP_print("GP value for " .. item .. " has been overriden to " .. gp);
@@ -5427,207 +5532,25 @@
 					</OnHide>
 				</Scripts>
 			</Button>
-			<Frame name="CEPGP_override_scrollframe">
+			<ScrollFrame name="OverrideScrollFrame" inherits="UIPanelScrollFrameTemplate">
 				<Size>
-					<AbsDimension x="360" y="300"/>
+					<AbsDimension x="410" y="320" />
 				</Size>
 				<Anchors>
-					<Anchor point="TOPLEFT" relativeTo="CEPGP_override" relativePoint="TOPLEFT">
+					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT">
 						<Offset>
-							<AbsDimension x="10" y="-140"/>
+							<AbsDimension x="7.5" y="7.5"/>
 						</Offset>
 					</Anchor>
 				</Anchors>
-				<Frames>
-					<ScrollFrame name="CEPGP_overrideScrollFrame" inherits="FauxScrollFrameTemplate">
+				<ScrollChild>
+					<Frame name="CEPGP_override_scrollframe_container">
 						<Size>
-							<AbsDimension x="360" y="350"/>
+							<AbsDimension x="410" y="300" />
 						</Size>
-						<Anchors>
-							<Anchor point="RIGHT">
-								<Offset>
-									<AbsDimension x="-7" y="0"/>
-								</Offset>
-							</Anchor>
-						</Anchors>
-						<Scripts>
-							<OnVerticalScroll>
-								FauxScrollFrame_OnVerticalScroll(self, offset, 15, CEPGP_UpdateOverrideScrollBar); 
-							</OnVerticalScroll>
-							<OnShow>
-								CEPGP_UpdateOverrideScrollBar();
-							</OnShow>
-						</Scripts>
-					</ScrollFrame>
-					<Button name="CEPGP_overrideButton1" inherits="lootOverrideButtonTemplate" id="1" hidden="true">
-						<Anchors>
-							<Anchor point="TOPLEFT">
-								<Offset>
-									<AbsDimension x="5" y="-6"/>
-								</Offset>
-							</Anchor>
-						</Anchors>
-					</Button>
-					<Button name="CEPGP_overrideButton2" inherits="lootOverrideButtonTemplate" id="2" hidden="true">
-						<Anchors>
-							<Anchor point="TOPLEFT" relativeTo="CEPGP_overrideButton1" relativePoint="BOTTOMLEFT">
-								<Offset>
-									<AbsDimension x="0" y="-2"/>
-								</Offset>
-							</Anchor>
-						</Anchors>
-					</Button>
-					<Button name="CEPGP_overrideButton3" inherits="lootOverrideButtonTemplate" id="3" hidden="true">
-						<Anchors>
-							<Anchor point="TOPLEFT" relativeTo="CEPGP_overrideButton2" relativePoint="BOTTOMLEFT">
-								<Offset>
-									<AbsDimension x="0" y="-2"/>
-								</Offset>
-							</Anchor>
-						</Anchors>
-					</Button>
-					<Button name="CEPGP_overrideButton4" inherits="lootOverrideButtonTemplate" id="4" hidden="true">
-						<Anchors>
-							<Anchor point="TOPLEFT" relativeTo="CEPGP_overrideButton3" relativePoint="BOTTOMLEFT">
-								<Offset>
-									<AbsDimension x="0" y="-2"/>
-								</Offset>
-							</Anchor>
-						</Anchors>
-					</Button>
-					<Button name="CEPGP_overrideButton5" inherits="lootOverrideButtonTemplate" id="5" hidden="true">
-						<Anchors>
-							<Anchor point="TOPLEFT" relativeTo="CEPGP_overrideButton4" relativePoint="BOTTOMLEFT">
-								<Offset>
-									<AbsDimension x="0" y="-2"/>
-								</Offset>
-							</Anchor>
-						</Anchors>
-					</Button>
-					<Button name="CEPGP_overrideButton6" inherits="lootOverrideButtonTemplate" id="6" hidden="true">
-						<Anchors>
-							<Anchor point="TOPLEFT" relativeTo="CEPGP_overrideButton5" relativePoint="BOTTOMLEFT">
-								<Offset>
-									<AbsDimension x="0" y="-2"/>
-								</Offset>
-							</Anchor>
-						</Anchors>
-					</Button>
-					<Button name="CEPGP_overrideButton7" inherits="lootOverrideButtonTemplate" id="7" hidden="true">
-						<Anchors>
-							<Anchor point="TOPLEFT" relativeTo="CEPGP_overrideButton6" relativePoint="BOTTOMLEFT">
-								<Offset>
-									<AbsDimension x="0" y="-2"/>
-								</Offset>
-							</Anchor>
-						</Anchors>
-					</Button>
-					<Button name="CEPGP_overrideButton8" inherits="lootOverrideButtonTemplate" id="8" hidden="true">
-						<Anchors>
-							<Anchor point="TOPLEFT" relativeTo="CEPGP_overrideButton7" relativePoint="BOTTOMLEFT">
-								<Offset>
-									<AbsDimension x="0" y="-2"/>
-								</Offset>
-							</Anchor>
-						</Anchors>
-					</Button>
-					<Button name="CEPGP_overrideButton9" inherits="lootOverrideButtonTemplate" id="9" hidden="true">
-						<Anchors>
-							<Anchor point="TOPLEFT" relativeTo="CEPGP_overrideButton8" relativePoint="BOTTOMLEFT">
-								<Offset>
-									<AbsDimension x="0" y="-2"/>
-								</Offset>
-							</Anchor>
-						</Anchors>
-					</Button>
-					<Button name="CEPGP_overrideButton10" inherits="lootOverrideButtonTemplate" id="10" hidden="true">
-						<Anchors>
-							<Anchor point="TOPLEFT" relativeTo="CEPGP_overrideButton9" relativePoint="BOTTOMLEFT">
-								<Offset>
-									<AbsDimension x="0" y="-2"/>
-								</Offset>
-							</Anchor>
-						</Anchors>
-					</Button>
-					<Button name="CEPGP_overrideButton11" inherits="lootOverrideButtonTemplate" id="11" hidden="true">
-						<Anchors>
-							<Anchor point="TOPLEFT" relativeTo="CEPGP_overrideButton10" relativePoint="BOTTOMLEFT">
-								<Offset>
-									<AbsDimension x="0" y="-2"/>
-								</Offset>
-							</Anchor>
-						</Anchors>
-					</Button>
-					<Button name="CEPGP_overrideButton12" inherits="lootOverrideButtonTemplate" id="12" hidden="true">
-						<Anchors>
-							<Anchor point="TOPLEFT" relativeTo="CEPGP_overrideButton11" relativePoint="BOTTOMLEFT">
-								<Offset>
-									<AbsDimension x="0" y="-2"/>
-								</Offset>
-							</Anchor>
-						</Anchors>
-					</Button>
-					<Button name="CEPGP_overrideButton13" inherits="lootOverrideButtonTemplate" id="13" hidden="true">
-						<Anchors>
-							<Anchor point="TOPLEFT" relativeTo="CEPGP_overrideButton12" relativePoint="BOTTOMLEFT">
-								<Offset>
-									<AbsDimension x="0" y="-2"/>
-								</Offset>
-							</Anchor>
-						</Anchors>
-					</Button>
-					<Button name="CEPGP_overrideButton14" inherits="lootOverrideButtonTemplate" id="14" hidden="true">
-						<Anchors>
-							<Anchor point="TOPLEFT" relativeTo="CEPGP_overrideButton13" relativePoint="BOTTOMLEFT">
-								<Offset>
-									<AbsDimension x="0" y="-2"/>
-								</Offset>
-							</Anchor>
-						</Anchors>
-					</Button>
-					<Button name="CEPGP_overrideButton15" inherits="lootOverrideButtonTemplate" id="15" hidden="true">
-						<Anchors>
-							<Anchor point="TOPLEFT" relativeTo="CEPGP_overrideButton14" relativePoint="BOTTOMLEFT">
-								<Offset>
-									<AbsDimension x="0" y="-2"/>
-								</Offset>
-							</Anchor>
-						</Anchors>
-					</Button>
-					<Button name="CEPGP_overrideButton16" inherits="lootOverrideButtonTemplate" id="16" hidden="true">
-						<Anchors>
-							<Anchor point="TOPLEFT" relativeTo="CEPGP_overrideButton15" relativePoint="BOTTOMLEFT">
-								<Offset>
-									<AbsDimension x="0" y="-2"/>
-								</Offset>
-							</Anchor>
-						</Anchors>
-					</Button>
-					<Button name="CEPGP_overrideButton17" inherits="lootOverrideButtonTemplate" id="17" hidden="true">
-						<Anchors>
-							<Anchor point="TOPLEFT" relativeTo="CEPGP_overrideButton16" relativePoint="BOTTOMLEFT">
-								<Offset>
-									<AbsDimension x="0" y="-2"/>
-								</Offset>
-							</Anchor>
-						</Anchors>
-					</Button>
-					<Button name="CEPGP_overrideButton18" inherits="lootOverrideButtonTemplate" id="18" hidden="true">
-						<Anchors>
-							<Anchor point="TOPLEFT" relativeTo="CEPGP_overrideButton17" relativePoint="BOTTOMLEFT">
-								<Offset>
-									<AbsDimension x="0" y="-2"/>
-								</Offset>
-							</Anchor>
-						</Anchors>
-					</Button>
-					<Scripts>
-					<OnLoad>
-						self:SetBackdropColor(0.1, 0.1, 0.1);
-					</OnLoad>
-				</Scripts>
-				</Frames>
-			</Frame>
+					</Frame>
+				</ScrollChild>
+			</ScrollFrame>
 		</Frames>
 		<Scripts>
 			<OnLoad>
@@ -5640,6 +5563,9 @@
 			<OnDragStop>
 				self:StopMovingOrSizing();
 			</OnDragStop>
+			<OnShow>
+				CEPGP_UpdateOverrideScrollBar();
+			</OnShow>
 		</Scripts>
 	</Frame>
 	
@@ -5937,6 +5863,9 @@
 							<OnShow>
 								self:SetText(CEPGP_getDebugInfo());
 							</OnShow>
+							<OnEditFocusLost>
+								self:HighlightText(0,0);
+							</OnEditFocusLost>
 						</Scripts>
 					</EditBox>
 				</ScrollChild>
@@ -6536,6 +6465,15 @@
 						</Anchor>
 					</Anchors>
 				</FontString>
+				<FontString name="CEPGP_respond_timeout_string" inherits="GameFontNormal">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativePoint="TOPLEFT">
+							<Offset>
+								<AbsDimension x="12.5" y="-12.5" />
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
 			</Layer>
 		</Layers>
 		<Frames>
@@ -6649,6 +6587,7 @@
 				<Scripts>
 					<OnClick>
 						PlaySound(799);
+						CEPGP_SendAddonMsg("LootRsp;6", "RAID");
 						CEPGP_respond:Hide();
 					</OnClick>
 				</Scripts>
@@ -6768,6 +6707,9 @@
 							<OnEnterPressed>
 								self:ClearFocus();
 							</OnEnterPressed>
+							<OnEditFocusLost>
+								self:HighlightText(0,0);
+							</OnEditFocusLost>
 						</Scripts>
 					</EditBox>
 				</ScrollChild>
@@ -6854,6 +6796,24 @@
 								</Anchor>
 							</Anchors>
 						</FontString>
+						<FontString name="CEPGP_export_attr_PR" inherits="GameFontNormal" text="Priority">
+							<Anchors>
+								<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="CEPGP_export_attr_rank">
+									<Offset>
+										<AbsDimension x="20" y="0"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
+						<FontString name="CEPGP_export_attr_trailing" inherits="GameFontNormal" text="Trailing Comma">
+							<Anchors>
+								<Anchor point="TOP" relativePoint="BOTTOM" relativeTo="CEPGP_export_attr_class">
+									<Offset>
+										<AbsDimension x="0" y="-30"/>
+									</Offset>
+								</Anchor>
+							</Anchors>
+						</FontString>
 					</Layer>
 				</Layers>
 				<Frames>
@@ -6899,6 +6859,54 @@
 							<OnEnter>
 								GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT");
 								GameTooltip:SetText("Add guild ranks to the exported fields.");
+							</OnEnter>
+							<OnLeave>
+								GameTooltip:Hide();
+							</OnLeave>
+						</Scripts>
+					</CheckButton>
+					<CheckButton name="CEPGP_export_PR_check" inherits="UIOptionsCheckButtonTemplate" checked="true">
+						<HitRectInsets>
+							<AbsInset left="0" right="0" top="0" bottom="0" />
+						</HitRectInsets>
+						<Anchors>
+							<Anchor point="TOP" relativePoint="BOTTOM" relativeTo="CEPGP_export_attr_PR">
+								<Offset>
+									<AbsDimension x="-5" y="0" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnClick>
+								CEPGP_formatExport();
+							</OnClick>
+							<OnEnter>
+								GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT");
+								GameTooltip:SetText("Add priority to the exported fields.");
+							</OnEnter>
+							<OnLeave>
+								GameTooltip:Hide();
+							</OnLeave>
+						</Scripts>
+					</CheckButton>
+					<CheckButton name="CEPGP_export_trailing_check" inherits="UIOptionsCheckButtonTemplate" checked="true">
+						<HitRectInsets>
+							<AbsInset left="0" right="0" top="0" bottom="0" />
+						</HitRectInsets>
+						<Anchors>
+							<Anchor point="TOP" relativePoint="BOTTOM" relativeTo="CEPGP_export_attr_trailing">
+								<Offset>
+									<AbsDimension x="-5" y="0" />
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnClick>
+								CEPGP_formatExport();
+							</OnClick>
+							<OnEnter>
+								GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT");
+								GameTooltip:SetText("Add a trailing comma at the end of each record.");
 							</OnEnter>
 							<OnLeave>
 								GameTooltip:Hide();
@@ -6994,90 +7002,6 @@
 		</Scripts>
 	</Frame>
 	
-	<Frame name="CEPGP_update_notice" parent="UIParent" hidden="true" enableMouse="true" toplevel="true" movable="true" clampedToScreen="true">
-		<Size>
-			<AbsDimension x="300" y="150" />
-		</Size>
-		<Anchors>
-			<Anchor point="CENTER" />
-		</Anchors>
-		<Backdrop bgFile="Interface\Tooltips\UI-Tooltip-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
-			<Color r="0" g="0" b="0" />
-			<BackgroundInsets>
-				<AbsInset left="11" right="12" top="12" bottom="11" />
-			</BackgroundInsets>
-			<TileSize>
-				<AbsValue val="32" />
-			</TileSize>
-			<EdgeSize>
-				<AbsValue val="32" />
-			</EdgeSize>
-		</Backdrop>
-		<Layers>
-			<Layer level="ARTWORK">
-				<Texture file="Interface\DialogFrame\UI-DialogBox-Header">
-					<Size>
-						<AbsDimension x="300" y="64"/>
-					</Size>
-					<Anchors>
-						<Anchor point="TOP">
-							<Offset>
-								<AbsDimension x="0" y="12"/>
-							</Offset>
-						</Anchor>
-					</Anchors>
-				</Texture>
-			</Layer>
-			<Layer level="OVERLAY">
-				<FontString name="CEPGP_notice_head" inherits="GameFontNormal" text="Important Notice">
-					<Anchors>
-						<Anchor point="TOP">
-							<Offset>
-								<AbsDimension x="0" y="-2"/>
-							</Offset>
-						</Anchor>
-					</Anchors>
-				</FontString>
-				<FontString name="CEPGP_notice_desc" inherits="GameFontNormal">
-					<Anchors>
-						<Anchor point="TOP">
-							<Offset>
-								<AbsDimension x="0" y="-30"/>
-							</Offset>
-						</Anchor>
-					</Anchors>
-				</FontString>
-			</Layer>
-		</Layers>
-		<Frames>
-			<Button name="CEPGP_notice_yes" inherits="GameMenuButtonTemplate" text="Understood">
-				<Size>
-					<AbsDimension x="100" y="31" />
-				</Size>
-				<Anchors>
-					<Anchor point="BOTTOM" relativePoint="BOTTOM">
-						<Offset>
-							<AbsDimension x="0" y="10" />
-						</Offset>
-					</Anchor>
-				</Anchors>
-				<Scripts>
-					<OnClick>
-						PlaySound(799);
-						CEPGP_1120_notice = true;
-						CEPGP_update_notice:Hide();
-					</OnClick>
-				</Scripts>
-			</Button>
-		</Frames>
-		<Scripts>
-			<OnLoad>
-				CEPGP_notice_desc:SetText("|c00FF0000Classic EPGP Important Notice|r\nVersion 1.12.0 contained major updates which\nrender previous versions of CEPGP incompatible.\n\nPlease ensure that your guild members update to\nthe latest version to avoid unexpected results.");
-				self:SetWidth(CEPGP_notice_desc:GetStringWidth()+25);
-			</OnLoad>
-		</Scripts>
-	</Frame>
-
 	<Frame name="CEPGP_standby_addRank" parent="UIParent" hidden="true" enableMouse="true" toplevel="true" movable="true" clampedToScreen="true">
 		<Size>
 			<AbsDimension x="300" y="200" />
@@ -7549,11 +7473,14 @@
 								self:ClearFocus();
 							</OnEnterPressed>
 							<OnEditFocusLost>
+								self:HighlightText(0,0);
 								local value = self:GetText();
 								local default = CEPGP_response_buttons[1][2];
 								if value == "" then
 									self:SetText(default);
 									CEPGP_print("Button text cannot be blank", true);
+									return;
+								elseif value == default then
 									return;
 								end
 								
@@ -7586,13 +7513,14 @@
 								self:ClearFocus();
 							</OnEnterPressed>
 							<OnEditFocusLost>
-								local value = self:GetText();
+								self:HighlightText(0,0);
+								local value = tonumber(self:GetText());
 								local default = CEPGP_response_buttons[1][3];
-								if value == "" then
+								if not value or value == default then
 									self:SetText(default);
 									return;
 								end
-								CEPGP_response_buttons[1][3] = tonumber(value);
+								CEPGP_response_buttons[1][3] = value;
 								CEPGP_print("Updated GP discount for button 1.");
 							</OnEditFocusLost>
 							<OnShow>
@@ -7690,11 +7618,14 @@
 								self:ClearFocus();
 							</OnEnterPressed>
 							<OnEditFocusLost>
+								self:HighlightText(0,0);
 								local value = self:GetText();
 								local default = CEPGP_response_buttons[2][2];
 								if value == "" then
 									self:SetText(default);
 									CEPGP_print("Button text cannot be blank", true);
+									return;
+								elseif value == default then
 									return;
 								end
 								
@@ -7727,13 +7658,14 @@
 								self:ClearFocus();
 							</OnEnterPressed>
 							<OnEditFocusLost>
-								local value = self:GetText();
+								self:HighlightText(0,0);
+								local value = tonumber(self:GetText());
 								local default = CEPGP_response_buttons[2][3];
-								if value == "" then
+								if not value or value == default then
 									self:SetText(default);
 									return;
 								end
-								CEPGP_response_buttons[2][3] = tonumber(value);
+								CEPGP_response_buttons[2][3] = value;
 								CEPGP_print("Updated GP discount for button 2.");
 							</OnEditFocusLost>
 							<OnShow>
@@ -7831,11 +7763,14 @@
 								self:ClearFocus();
 							</OnEnterPressed>
 							<OnEditFocusLost>
+								self:HighlightText(0,0);
 								local value = self:GetText();
 								local default = CEPGP_response_buttons[3][2];
 								if value == "" then
 									self:SetText(default);
 									CEPGP_print("Button text cannot be blank", true);
+									return;
+								elseif value == default then
 									return;
 								end
 								CEPGP_response_buttons[3][2] = value;
@@ -7867,13 +7802,14 @@
 								self:ClearFocus();
 							</OnEnterPressed>
 							<OnEditFocusLost>
-								local value = self:GetText();
-								local default = CEPGP_response_buttons[4][3];
-								if value == "" then
+								self:HighlightText(0,0);
+								local value = tonumber(self:GetText());
+								local default = CEPGP_response_buttons[3][3];
+								if not value or value == default then
 									self:SetText(default);
 									return;
 								end
-								CEPGP_response_buttons[3][3] = tonumber(value);
+								CEPGP_response_buttons[3][3] = value;
 								CEPGP_print("Updated GP discount for button 3.");
 							</OnEditFocusLost>
 							<OnShow>
@@ -7971,11 +7907,14 @@
 								self:ClearFocus();
 							</OnEnterPressed>
 							<OnEditFocusLost>
+								self:HighlightText(0,0);
 								local value = self:GetText();
 								local default = CEPGP_response_buttons[4][2];
 								if value == "" then
 									self:SetText(default);
 									CEPGP_print("Button text cannot be blank", true);
+									return;
+								elseif value == default then
 									return;
 								end
 								CEPGP_response_buttons[4][2] = value;
@@ -8007,13 +7946,14 @@
 								self:ClearFocus();
 							</OnEnterPressed>
 							<OnEditFocusLost>
-								local value = self:GetText();
+								self:HighlightText(0,0);
+								local value = tonumber(self:GetText());
 								local default = CEPGP_response_buttons[4][3];
-								if value == "" then
+								if not value or value == default then
 									self:SetText(default);
 									return;
 								end
-								CEPGP_response_buttons[4][3] = tonumber(value);
+								CEPGP_response_buttons[4][3] = value;
 								CEPGP_print("Updated GP discount for button 4.");
 							</OnEditFocusLost>
 							<OnShow>
@@ -8023,9 +7963,72 @@
 					</EditBox>
 				</Frames>
 			</Frame>
+			<Frame name="$parent_timer">
+				<Size>
+					<AbsDimension x="275" y="7" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPLEFT" relativePoint="BOTTOMLEFT" relativeTo="$parent_2">
+						<AbsDimension x="0" y="7.5" />
+					</Anchor>
+				</Anchors>
+				<Layers>
+					<Layer level="OVERLAY">
+						<FontString name="$parent_text" inherits="GameFontNormal" text="Timeout Duration: ">
+							<Anchors>
+								<Anchor point="LEFT" />
+							</Anchors>
+						</FontString>
+					</Layer>
+				</Layers>
+				<Frames>
+					<EditBox name="$parent_value" inherits="InputBoxTemplate" autofocus="false" numeric="true">
+						<Size>
+							<AbsDimension x="60" y="20" />
+						</Size>
+						<Anchors>
+							<Anchor point="LEFT" relativePoint="RIGHT" relativeTo="$parent_text">
+								<AbsDimension x="10" y="0" />
+							</Anchor>
+						</Anchors>
+						<Scripts>
+							<OnEnter>
+								GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT");
+								GameTooltip:SetText("Loot Master Feature\nHow many seconds raid members have before they automatically pass on an item.\n0 = disabled (no auto passing)");
+							</OnEnter>
+							<OnLeave>
+								GameTooltip:Hide();
+							</OnLeave>
+							<OnEnterPressed>
+								self:ClearFocus();
+							</OnEnterPressed>
+							<OnEditFocusLost>
+								self:HighlightText(0,0);
+								local value = tonumber(self:GetText());
+								local default = CEPGP_response_time;
+								if not value or value == default then
+									self:SetText(tostring(CEPGP_response_time));
+									return;
+								end
+								if tonumber(value) then
+									CEPGP_response_time = tonumber(value);
+									if value == "0" then
+										CEPGP_print("Disabled loot timeout");
+									else
+										CEPGP_print("Updated loot timeout");
+									end
+								end
+							</OnEditFocusLost>
+							<OnShow>
+								self:SetText(tostring(CEPGP_response_time));
+							</OnShow>
+						</Scripts>
+					</EditBox>
+				</Frames>
+			</Frame>
 			<Frame name="$parent_preview">
 				<Size>
-					<AbsDimension x="550" y="75" />
+					<AbsDimension x="550" y="65" />
 				</Size>
 				<Anchors>
 					<Anchor point="BOTTOM" relativePoint="BOTTOM">
@@ -8202,5 +8205,311 @@
 				self:StopMovingOrSizing();
 			</OnDragStop>
 		</Scripts>
+	</Frame>
+
+	<Frame name="CEPGP_import" parent="UIParent" hidden="true" enableMouse="true" toplevel="true" movable="true" clampedToScreen="true">
+		<Size>
+			<AbsDimension x="600" y="275" />
+		</Size>
+		<Anchors>
+			<Anchor point="CENTER" />
+		</Anchors>
+		<Backdrop bgFile="Interface\Tooltips\UI-Tooltip-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
+			<Color r="0" g="0" b="0" />
+			<BackgroundInsets>
+				<AbsInset left="11" right="12" top="12" bottom="11" />
+			</BackgroundInsets>
+			<TileSize>
+				<AbsValue val="32" />
+			</TileSize>
+			<EdgeSize>
+				<AbsValue val="32" />
+			</EdgeSize>
+		</Backdrop>
+		<Attributes>
+			<Attribute name="format" type="string" value="CSV" />
+		</Attributes>
+		<Layers>
+			<Layer level="ARTWORK">
+				<Texture file="Interface\DialogFrame\UI-DialogBox-Header">
+					<Size>
+						<AbsDimension x="256" y="64"/>
+					</Size>
+					<Anchors>
+						<Anchor point="TOP">
+							<Offset>
+								<AbsDimension x="0" y="12"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<FontString name="$parent_title" inherits="GameFontNormal" text="Import EPGP">
+					<Anchors>
+						<Anchor point="TOP">
+							<Offset>
+								<AbsDimension x="0" y="-2"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+				<FontString name="$parent_desc" inherits="GameFontNormal">
+					<Anchors>
+						<Anchor point="TOP">
+							<Offset>
+								<AbsDimension x="0" y="-30"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name="$parent_close" inherits="UIPanelCloseButton">
+				<Size>
+					<AbsDimension x="40" y="40" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOPRIGHT">
+						<Offset>
+							<AbsDimension x="-3" y="-3" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						PlaySound(799);
+						CEPGP_import:Hide()
+					</OnClick>
+				</Scripts>
+			</Button>
+			<ScrollFrame name="$parent_scrollframe" inherits="UIPanelScrollFrameTemplate">
+				<Size>
+					<AbsDimension x="340" y="175"/>
+				</Size>
+				<Anchors>
+					<Anchor point="LEFT" relativePoint="LEFT">
+						<Offset>
+							<AbsDimension x="15" y="15"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<ScrollChild>
+					<EditBox name="CEPGP_import_dump" autofocus="false" multiline="true">
+						<Anchors>
+							<Anchor point="CENTER" />
+						</Anchors>
+						<FontString inherits="GameFontNormal"/>
+						<Layers>
+							<Layer level="OVERLAY">
+								<FontString name="$parent_clickhere" inherits="GameFontNormal" text="Click Here to Type">
+									<Anchors>
+										<Anchor point="TOPLEFT" relativePoint="TOPLEFT">
+											<Offset>
+												<AbsDimension x="0" y="0"/>
+											</Offset>
+										</Anchor>
+									</Anchors>
+								</FontString>
+							</Layer>
+						</Layers>
+						<Scripts>
+							<OnLoad>
+								self:SetSize(CEPGP_import_scrollframe:GetSize());
+							</OnLoad>
+							<OnEscapePressed>
+								self:ClearFocus();
+							</OnEscapePressed>
+							<OnEnterPressed>
+								self:ClearFocus();
+							</OnEnterPressed>
+							<OnTextChanged>
+								if #self:GetText() > 0 then
+									CEPGP_import_dump_clickhere:Hide();
+								else
+									CEPGP_import_dump_clickhere:Show();
+								end
+							</OnTextChanged>
+							<OnEditFocusLost>
+								self:HighlightText(0,0);
+							</OnEditFocusLost>
+						</Scripts>
+					</EditBox>
+				</ScrollChild>
+				<Scripts>
+					<OnLoad>
+						self:SetScrollChild(CEPGP_import_dump);
+					</OnLoad>
+				</Scripts>
+			</ScrollFrame>
+			<ScrollFrame name="$parent_progress_scrollframe" inherits="UIPanelScrollFrameTemplate">
+				<Size>
+					<AbsDimension x="170" y="85"/>
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT">
+						<Offset>
+							<AbsDimension x="-35" y="15"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<ScrollChild>
+					<EditBox name="CEPGP_import_progress_dump" autofocus="false" multiline="true">
+						<Anchors>
+							<Anchor point="CENTER" />
+						</Anchors>
+						<FontString inherits="GameFontNormal"/>
+						<Scripts>
+							<OnLoad>
+								self:SetSize(CEPGP_import_progress_scrollframe:GetSize());
+								self:Disable();
+							</OnLoad>
+							<OnEscapePressed>
+								self:ClearFocus();
+							</OnEscapePressed>
+							<OnEnterPressed>
+								self:ClearFocus();
+							</OnEnterPressed>
+						</Scripts>
+					</EditBox>
+				</ScrollChild>
+			</ScrollFrame>
+			<Button name="$parent_confirm" inherits="GameMenuButtonTemplate" text="Import Standings">
+				<Size>
+					<AbsDimension x="150" y="35" />
+				</Size>
+				<Anchors>
+					<Anchor point="TOP" relativePoint="BOTTOM" relativeTo="$parent_scrollframe">
+						<Offset>
+							<AbsDimension x="-5" y="-5" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						CEPGP_importStandings();
+						CEPGP_import_dump:ClearFocus();
+					</OnClick>
+					<OnEnter>
+						GameTooltip:SetOwner(self, "ANCHOR_TOPRIGHT");
+						GameTooltip:SetText("Processes the CSV string supplied and updates your guild standings.");
+					</OnEnter>
+					<OnLeave>
+						GameTooltip:Hide();
+					</OnLeave>
+				</Scripts>
+			</Button>
+			<Frame name="$parent_guide">
+				<Size>
+					<AbsDimension x="200" y="240" />
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" />
+				</Anchors>
+			</Frame>
+		</Frames>
+		<Layers>
+			<Layer level="OVERLAY">
+				<FontString name="CEPGP_import_guide_text" inherits="GameFontNormal" text="" justifyH="LEFT">
+					<Anchors>
+						<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeTo="$parent_scrollframe">
+							<Offset>
+								<AbsDimension x="40" y="0"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Scripts>
+			<OnLoad>
+				CEPGP_import_guide_text:SetText("Paste a CSV formatted string in to\nthe box on the left and then\nclick the \"Import Standings\" button\nto confirm the changes.\nThe expected format to use is:\nplayer,EP,GP, (Include the\ntrailing comma after GP).\n\nA record of your guild standings\nwill be automatically saved incase\nyou need to revert the changes.");
+			</OnLoad>
+			<OnMouseDown>
+				self:StartMoving();
+			</OnMouseDown>
+			<OnMouseUp>
+				self:StopMovingOrSizing();
+			</OnMouseUp>
+		</Scripts>
+	</Frame>
+
+	<Frame name="CEPGP_ep_award_confirm" parent="UIParent" hidden="true" enableMouse="true" toplevel="true" movable="true" clampedToScreen="true">
+		<Size>
+			<AbsDimension x="400" y="100" />
+		</Size>
+		<Backdrop bgFile="Interface\Tooltips\UI-Tooltip-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
+			<Color r="0" g="0" b="0" />
+			<BackgroundInsets>
+				<AbsInset left="11" right="12" top="12" bottom="11" />
+			</BackgroundInsets>
+			<TileSize>
+				<AbsValue val="32" />
+			</TileSize>
+			<EdgeSize>
+				<AbsValue val="32" />
+			</EdgeSize>
+		</Backdrop>
+		<Anchors>
+			<Anchor point="CENTER" />
+		</Anchors>
+		<Attributes>
+			<Attribute name="guid" type="string" value="" />
+			<Attribute name="name" type="string" value="" />
+		</Attributes>
+		<Layers>
+			<Layer level="OVERLAY">
+				<FontString name="$parent_desc" inherits="GameFontNormal">
+					<Anchors>
+						<Anchor point="TOP">
+							<Offset>
+								<AbsDimension x="0" y="-30"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+				</FontString>
+			</Layer>
+		</Layers>
+		<Frames>
+			<Button name="$parent_yes" inherits="GameMenuButtonTemplate" text="Yes">
+				<Size>
+					<AbsDimension x="100" y="31" />
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT">
+						<Offset>
+							<AbsDimension x="7.5" y="10" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						PlaySound(799);
+						CEPGP_handleCombat(CEPGP_ep_award_confirm:GetAttribute("name"), true, CEPGP_ep_award_confirm:GetAttribute("guid"));
+						CEPGP_ep_award_confirm:Hide();
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="$parent_no" inherits="GameMenuButtonTemplate" text="No">
+				<Size>
+					<AbsDimension x="100" y="31" />
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT">
+						<Offset>
+							<AbsDimension x="-7.5" y="10" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						PlaySound(799);
+						
+						CEPGP_ep_award_confirm:Hide();
+					</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
 	</Frame>
 </Ui>

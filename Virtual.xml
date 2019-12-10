@@ -245,7 +245,7 @@
 	</Button>
 	<Button name="RaidButtonTemplate" virtual="true">
 		<Size>
-			<AbsDimension x="420" y="15"/>
+			<AbsDimension x="580" y="15"/>
 		</Size>
 		<Frames>
 		</Frames>
@@ -439,7 +439,7 @@
 	</Button>
 	<Button name="trafficButtonTemplate" virtual="true">
 		<Size>
-			<AbsDimension x="760" y="15"/>
+			<AbsDimension x="720" y="15"/>
 		</Size>
 		<Layers>
 			<Layer level="BORDER">
@@ -454,9 +454,9 @@
 				</FontString>
 				<FontString name="$parentIssuer" inherits="GameFontHighlightSmall" justifyH="LEFT">
 					<Anchors>
-						<Anchor point="LEFT" relativeTo="$parent" relativePoint="LEFT">
+						<Anchor point="RIGHT" relativeTo="$parent" relativePoint="LEFT">
 							<Offset>
-								<AbsDimension x="100" y="0"/>
+								<AbsDimension x="140" y="0"/>
 							</Offset>
 						</Anchor>
 					</Anchors>
@@ -526,7 +526,28 @@
 					</Layer>
 				</Layers>
 			</Button>
+			<Button name="$parentRemove" inherits="UiPanelCloseButton">
+				<Size>
+					<AbsDimension x="20" y="20" />
+				</Size>
+				<Anchors>
+					<Anchor point="RIGHT" relativePoint="RIGHT">
+						<Offset>
+							<AbsDimension x="0" y="0" />
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						PlaySound(799);
+						CEPGP_ListButton_OnClick(self:GetName());
+					</OnClick>
+				</Scripts>
+			</Button>
 		</Frames>
+		<Attributes>
+			<Attribute name="delete_confirm" type="boolean" value="false" />
+		</Attributes>
 		<Scripts>
 			<OnLoad>
 				self:RegisterForClicks("LeftButtonDown");
@@ -534,6 +555,9 @@
 			<OnClick>
 				PlaySound(856);
 			</OnClick>
+			<OnHide>
+				self:SetAttribute("delete_confirm", "false");
+			</OnHide>
 		</Scripts>
 		<HighlightTexture file="Interface\QuestFrame\UI-QuestTitleHighlight" alphaMode="ADD"/>
 	</Button>
@@ -737,34 +761,36 @@
 			<OnEditFocusLost>
 				local L = CEPGP_Locale:GetLocale("CEPGP")
 
+				self:HighlightText(0,0);
 				local name = strsub(self:GetName(), 15, strfind(self:GetName(), "_EP")-1);
 				local value = self:GetText();
 				if value == "" or not CEPGP_isNumber(value) then
-					self:SetText(tostring(EPVALS[L[name]]));
-				elseif value == EPVALS[L[name]] then
+					self:SetText(tostring(EPVALS[name]));
+				elseif value == EPVALS[name] then
 					return;
-				elseif EPVALS[L[name]] ~= tonumber(value) then
+				elseif EPVALS[name] ~= tonumber(value) then
 					if name == "The Edge of Madness" then
-						EPVALS[L["Gri'lek"]] = value;
-						EPVALS[L["Hazza'rah"]] = value;
-						EPVALS[L["Renataki"]] = value;
-						EPVALS[L["Wushoolay"]] = value;
+						EPVALS["Gri'lek"] = value;
+						EPVALS["Hazza'rah"] = value;
+						EPVALS["Renataki"] = value;
+						EPVALS["Wushoolay"] = value;
 					elseif name == "The Bug Trio" then
-						EPVALS[L["Princess Yauj"]] = value;
-						EPVALS[L["Vem"]] = value;
-						EPVALS[L["Lord Kri"]] = value;
+						EPVALS["Princess Yauj"] = value;
+						EPVALS["Vem"] = value;
+						EPVALS["Lord Kri"] = value;
 					elseif name == "The Twin Emperors" then
-						EPVALS[L["Emperor Vek'lor"]] = value;
-						EPVALS[L["Emperor Vek'nilash"]] = value;
+						EPVALS["Emperor Vek'lor"] = value;
+						EPVALS["Emperor Vek'nilash"] = value;
 					elseif name == "The Four Horsemen" then
-						EPVALS[L["Highlord Mograine"]] = value;
-						EPVALS[L["Thane Korth'azz"]] = value;
-						EPVALS[L["Lady Blaumeux"]] = value;
-						EPVALS[L["Sir Zeliek"]] = value;
+						EPVALS["Highlord Mograine"] = value;
+						EPVALS["Thane Korth'azz"] = value;
+						EPVALS["Lady Blaumeux"] = value;
+						EPVALS["Sir Zeliek"] = value;
 					else
-						EPVALS[L[name]] = value;
+						EPVALS[name] = value;
 					end
-					CEPGP_print("Updated EP awarded for " .. L[name]);
+					local tName = _G["CEPGP_options_" .. name .. "_val"]:GetText();
+					CEPGP_print(L["Updated EP award for "] .. tName);
 				end
 			</OnEditFocusLost>
 			<OnShow>
@@ -791,6 +817,9 @@
 		<Size>
 			<AbsDimension x="40" y="5" />
 		</Size>
+		<HitRectInsets>
+			<AbsInset left="0" right="2" top="-5" bottom="0" />
+		</HitRectInsets>
 		<Scripts>
 			<OnLoad>
 				self:SetAutoFocus(false);
@@ -801,6 +830,7 @@
 				self:ClearFocus();
 			</OnEnterPressed>
 			<OnEditFocusLost>
+				self:HighlightText(0,0);
 				local slot = string.sub(self:GetName(), 15, string.find(self:GetName(), "_weight")-1);
 				local value = self:GetText();
 				if CEPGP_isNumber(self:GetText()) and SLOTWEIGHTS[slot] ~= tonumber(value) then
@@ -827,55 +857,56 @@
 				local name = strsub(self:GetName(), 15, strfind(self:GetName(), "_auto_check")-1);
 				if name == "The Edge of Madness" then
 					if self:GetChecked() then
-						AUTOEP[L["Gri'lek"]] = true;
-						AUTOEP[L["Hazza'rah"]] = true;
-						AUTOEP[L["Renataki"]] = true;
-						AUTOEP[L["Wushoolay"]] = true;
+						AUTOEP["Gri'lek"] = true;
+						AUTOEP["Hazza'rah"] = true;
+						AUTOEP["Renataki"] = true;
+						AUTOEP["Wushoolay"] = true;
 					else
-						AUTOEP[L["Gri'lek"]] = false;
-						AUTOEP[L["Hazza'rah"]] = false;
-						AUTOEP[L["Renataki"]] = false;
-						AUTOEP[L["Wushoolay"]] = false;
+						AUTOEP["Gri'lek"] = false;
+						AUTOEP["Hazza'rah"] = false;
+						AUTOEP["Renataki"] = false;
+						AUTOEP["Wushoolay"] = false;
 					end
 				elseif name == "The Bug Trio" then
 					if self:GetChecked() then
-						AUTOEP[L["Princess Yauj"]] = true;
-						AUTOEP[L["Vem"]] = true;
-						AUTOEP[L["Lord Kri"]] = true;
+						AUTOEP["Princess Yauj"] = true;
+						AUTOEP["Vem"] = true;
+						AUTOEP["Lord Kri"] = true;
 					else
-						AUTOEP[L["Princess Yauj"]] = false;
-						AUTOEP[L["Vem"]] = false;
-						AUTOEP[L["Lord Kri"]] = false;
+						AUTOEP["Princess Yauj"] = false;
+						AUTOEP["Vem"] = false;
+						AUTOEP["Lord Kri"] = false;
 					end
 				elseif name == "The Twin Emperors" then
 					if self:GetChecked() then
-						AUTOEP[L["Emperor Vek'lor"]] = true;
-						AUTOEP[L["Emperor Vek'nilash"]] = true;
+						AUTOEP["Emperor Vek'lor"] = true;
+						AUTOEP["Emperor Vek'nilash"] = true;
 					else
-						AUTOEP[L["Emperor Vek'lor"]] = false;
-						AUTOEP[L["Emperor Vek'nilash"]] = false;
+						AUTOEP["Emperor Vek'lor"] = false;
+						AUTOEP["Emperor Vek'nilash"] = false;
 					end
 				elseif name == "The Four Horsemen" then
 					if self:GetChecked() then
-						AUTOEP[L["Highlord Mograine"]] = true;
-						AUTOEP[L["Thane Korth'azz"]] = true;
-						AUTOEP[L["Lady Blaumeux"]] = true;
-						AUTOEP[L["Sir Zeliek"]] = true;
+						AUTOEP["Highlord Mograine"] = true;
+						AUTOEP["Thane Korth'azz"] = true;
+						AUTOEP["Lady Blaumeux"] = true;
+						AUTOEP["Sir Zeliek"] = true;
 					else
-						AUTOEP[L["Highlord Mograine"]] = false;
-						AUTOEP[L["Thane Korth'azz"]] = false;
-						AUTOEP[L["Lady Blaumeux"]] = false;
-						AUTOEP[L["Sir Zeliek"]] = false;
+						AUTOEP["Highlord Mograine"] = false;
+						AUTOEP["Thane Korth'azz"] = false;
+						AUTOEP["Lady Blaumeux"] = false;
+						AUTOEP["Sir Zeliek"] = false;
 					end
 				else
 					local name = strsub(self:GetName(), 15, strfind(self:GetName(), "_auto_check")-1);
 					if self:GetChecked() then
-						AUTOEP[L[name]] = true;
+						AUTOEP[name] = true;
 					else
-						AUTOEP[L[name]] = false;
+						AUTOEP[name] = false;
 					end
 				end
-				CEPGP_print("Updated auto award for " .. L[name]);
+				local tName = _G["CEPGP_options_" .. name .. "_val"]:GetText();
+				CEPGP_print(L["Updated auto award for "] .. tName);
 			</OnClick>
 			<OnShow>
 				local L = CEPGP_Locale:GetLocale("CEPGP")

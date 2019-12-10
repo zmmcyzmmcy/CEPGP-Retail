@@ -1,5 +1,7 @@
-function CEPGP_IncAddonMsg(message, sender)
-	local args = CEPGP_split(message); -- The broken down message, delimited by semi-colons
+local L = CEPGP_Locale:GetLocale("CEPGP")
+
+function CEPGP_IncAddonMsg(message, sender, sync)
+	local args = CEPGP_split(message, ";"); -- The broken down message, delimited by semi-colons
 	
 	if args[1] == "CEPGP_setDistID" then
 		CEPGP_DistID = args[2];
@@ -55,13 +57,14 @@ function CEPGP_IncAddonMsg(message, sender)
 		if CEPGP_itemsTable[sender] then
 			response = CEPGP_itemsTable[sender][3];
 		end
+		if not response and not CEPGP_show_passes then return; end
 		CEPGP_itemsTable[sender] = {};
 		CEPGP_itemsTable[sender] = {
 			[1] = itemID,
 			[2] = itemID2,
 			[3] = response
 		};
-		CEPGP_UpdateLootScrollBar();
+		CEPGP_UpdateLootScrollBar(true);
 	end
 		
 	if args[1] == UnitName("player") and args[2] == "versioncheck" then
@@ -113,9 +116,13 @@ function CEPGP_IncAddonMsg(message, sender)
 		
 		--Raid assists receiving !need responses in the format of !need;playername;itemID (of item being distributed)
 	elseif args[1] == "!need" and sender ~= UnitName("player") then
-		local response = args[4];
-		CEPGP_itemsTable[args[2]] = {};
-		CEPGP_itemsTable[args[2]][3] = response;
+		local response = tonumber(args[4]);
+		if not response then response = 5; end
+		if (CEPGP_show_passes and response == 6) or response < 6 then
+			CEPGP_itemsTable[args[2]] = {};
+			CEPGP_itemsTable[args[2]][3] = response;
+			CEPGP_UpdateLootScrollBar(sort);
+		end
 		
 	elseif args[1] == "LootClosed" then
 		_G["CEPGP_respond"]:Hide();		
@@ -164,72 +171,138 @@ function CEPGP_IncAddonMsg(message, sender)
 	elseif args[1] == "!info" and args[2] == UnitName("player") then--strfind(message, "!info"..UnitName("player")) then
 		CEPGP_print(args[3]);
 		
-	elseif (args[1] == UnitName("player") or args[1] == "?forceSync") and args[2] == "import" then
+	elseif (args[1] == UnitName("player") and args[2] == "import") or (args[1] == "?forceSync" and not args[2]) then
 		local lane = "GUILD";
+		local target = sender;
 		if args[1] == "?forceSync" then
-			local _, _, _, rIndex = CEPGP_getGuildInfo(sender); --rank index
-			if not rIndex then return; end
-			if rIndex + 1 <= CEPGP_force_sync_rank then --Index obtained by GetGuildRosterInfo starts at 0 whereas GuildControlGetRankName starts at 1 for some reason
-				CEPGP_print(sender .. " is synchronising your settings with theirs");
+			target = "?forceSync";
+			CEPGP_print("Synchronising CEPGP settings with Guild members.");
+		else
+			return;
+		end
+		CEPGP_SendAddonMsg(target..";impresponse;SYNCHRONISING;"..UnitName("player"), lane);
+		
+		
+		CEPGP_SendAddonMsg(target..";impresponse;CHANNEL;"..CHANNEL, lane);
+		
+			--	GP Options Page 1	--
+		CEPGP_SendAddonMsg(target..";impresponse;MOD;"..MOD, lane);
+		CEPGP_SendAddonMsg(target..";impresponse;COEF;"..COEF, lane);
+		CEPGP_SendAddonMsg(target..";impresponse;MOD_COEF;"..MOD_COEF, lane);
+		CEPGP_SendAddonMsg(target..";impresponse;BASEGP;"..BASEGP, lane);
+		CEPGP_SendAddonMsg(target..";impresponse;WHISPERMSG;"..CEPGP_standby_whisper_msg, lane);
+		CEPGP_SendAddonMsg(target..";impresponse;KEYWORD;"..CEPGP_keyword, lane);
+		if CEPGP_minGPDecayFactor then
+			CEPGP_SendAddonMsg(target..";impresponse;BASEGPFACTOR;true", lane);
+		else
+			CEPGP_SendAddonMsg(target..";impresponse;BASEGPFACTOR;false", lane);
+		end
+		
+			--	Loot GUI Options	--
+		for index, v in ipairs(CEPGP_response_buttons) do
+			if v[1] then
+				CEPGP_SendAddonMsg(target..";impresponse;LOOTGUIBUTTON;"..index..";true;"..v[2]..";"..v[3]);
+			else
+				CEPGP_SendAddonMsg(target..";impresponse;LOOTGUIBUTTON;"..index..";false;"..v[2]..";"..v[3]);
 			end
 		end
-		CEPGP_SendAddonMsg(sender..";impresponse;CHANNEL;"..CHANNEL, lane);
-		CEPGP_SendAddonMsg(sender..";impresponse;MOD;"..MOD, lane);
-		CEPGP_SendAddonMsg(sender..";impresponse;COEF;"..COEF, lane);
-		CEPGP_SendAddonMsg(sender..";impresponse;MOD_COEF;"..MOD_COEF, lane);
-		CEPGP_SendAddonMsg(sender..";impresponse;BASEGP;"..BASEGP, lane);
-		CEPGP_SendAddonMsg(sender..";impresponse;WHISPERMSG;"..CEPGP_standby_whisper_msg, lane);
-		CEPGP_SendAddonMsg(sender..";impresponse;KEYWORD;"..CEPGP_keyword, lane);
-		if STANDBYEP then
-			CEPGP_SendAddonMsg(sender..";impresponse;STANDBYEP;1", lane);
-		else
-			CEPGP_SendAddonMsg(sender..";impresponse;STANDBYEP;0", lane);
-		end
-		if STANDBYOFFLINE then
-			CEPGP_SendAddonMsg(sender..";impresponse;STANDBYOFFLINE;1", lane);
-		else
-			CEPGP_SendAddonMsg(sender..";impresponse;STANDBYOFFLINE;0", lane);
-		end
-		CEPGP_SendAddonMsg(sender..";impresponse;STANDBYPERCENT;"..STANDBYPERCENT, lane);
+		
+		CEPGP_SendAddonMsg(target..";impresponse;LOOTGUIBUTTONTIMEOUT;"..CEPGP_response_time);
+		
+			--	Slot Weights	--
 		for k, v in pairs(SLOTWEIGHTS) do
-			CEPGP_SendAddonMsg(sender..";impresponse;SLOTWEIGHTS;"..k..";"..v, lane);
+			CEPGP_SendAddonMsg(target..";impresponse;SLOTWEIGHTS;"..k..";"..v, lane);
 		end
 		if CEPGP_standby_byrank then --Implies result for both byrank and manual standby designation
-			CEPGP_SendAddonMsg(sender..";impresponse;STANDBYBYRANK;1", lane);
+			CEPGP_SendAddonMsg(target..";impresponse;STANDBYBYRANK;1", lane);
 		else
-			CEPGP_SendAddonMsg(sender..";impresponse;STANDBYBYRANK;0", lane);
+			CEPGP_SendAddonMsg(target..";impresponse;STANDBYBYRANK;0", lane);
 		end
-		if CEPGP_standby_accept_whispers then
-			CEPGP_SendAddonMsg(sender..";impresponse;STANDBYALLOWWHISPERS;1", lane);
+		
+			--	Standby EP	--		
+		if STANDBYEP then
+			CEPGP_SendAddonMsg(target..";impresponse;STANDBYEP;1", lane);
 		else
-			CEPGP_SendAddonMsg(sender..";impresponse;STANDBYALLOWWHISPERS;0", lane);
+			CEPGP_SendAddonMsg(target..";impresponse;STANDBYEP;0", lane);
+		end
+		if STANDBYOFFLINE then
+			CEPGP_SendAddonMsg(target..";impresponse;STANDBYOFFLINE;1", lane);
+		else
+			CEPGP_SendAddonMsg(target..";impresponse;STANDBYOFFLINE;0", lane);
+		end
+		if CEPGP_standby_share then
+			CEPGP_SendAddonMsg(target..";impresponse;STANDBYSHARE;true", lane);
+		else
+			CEPGP_SendAddonMsg(target..";impresponse;STANDBYSHARE;false", lane);
+		end
+		CEPGP_SendAddonMsg(target..";impresponse;STANDBYPERCENT;"..STANDBYPERCENT, lane);
+		if CEPGP_standby_accept_whispers then
+			CEPGP_SendAddonMsg(target..";impresponse;STANDBYALLOWWHISPERS;1", lane);
+		else
+			CEPGP_SendAddonMsg(target..";impresponse;STANDBYALLOWWHISPERS;0", lane);
 		end
 		for k, v in pairs(STANDBYRANKS) do
 			if STANDBYRANKS[k][2] then
-				CEPGP_SendAddonMsg(sender..";impresponse;STANDBYRANKS;"..k..";1", lane);
+				CEPGP_SendAddonMsg(target..";impresponse;STANDBYRANKS;"..k..";1", lane);
 			else
-				CEPGP_SendAddonMsg(sender..";impresponse;STANDBYRANKS;"..k..";0", lane);
+				CEPGP_SendAddonMsg(target..";impresponse;STANDBYRANKS;"..k..";0", lane);
 			end
 		end
+		
+		
+		
 		for k, v in pairs(EPVALS) do
-			CEPGP_SendAddonMsg(sender..";impresponse;EPVALS;"..k..";"..v, lane);
+			CEPGP_SendAddonMsg(target..";impresponse;EPVALS;"..k..";"..v, lane);
 		end
 		for k, v in pairs(AUTOEP) do
 			if AUTOEP[k] then
-				CEPGP_SendAddonMsg(sender..";impresponse;AUTOEP;"..k..";1", lane);
+				CEPGP_SendAddonMsg(target..";impresponse;AUTOEP;"..k..";1", lane);
 			else
-				CEPGP_SendAddonMsg(sender..";impresponse;AUTOEP;"..k..";0", lane);
+				CEPGP_SendAddonMsg(target..";impresponse;AUTOEP;"..k..";0", lane);
 			end
 		end
 		for k, v in pairs(OVERRIDE_INDEX) do
-			CEPGP_SendAddonMsg(sender..";impresponse;OVERRIDE;"..k..";"..v, lane);
+			CEPGP_SendAddonMsg(target..";impresponse;OVERRIDE;"..k..";"..v, lane);
 		end
-		CEPGP_SendAddonMsg(sender..";impresponse;COMPLETE;", lane);
+		CEPGP_SendAddonMsg(target..";impresponse;COMPLETE;", lane);
 		
-	elseif args[1] == UnitName("player") and args[2] == "impresponse" then
+		
+		
+	elseif (args[1] == UnitName("player") or (args[1] == "?forceSync" and sender ~= UnitName("player"))) and args[2] == "impresponse" then
+		if args[1] == "?forceSync" then
+			local _, _, _, rIndex = CEPGP_getGuildInfo(sender); --rank index
+			if not rIndex then return; end
+			if rIndex + 1 > CEPGP_force_sync_rank then --Index obtained by GetGuildRosterInfo starts at 0 whereas GuildControlGetRankName starts at 1 for some reason
+				return;
+			end
+		end
+		
 		local option = args[3];
+		if option == "SYNCHRONISING" then
+			CEPGP_print(sender .. " is synchronising your settings with theirs");
+		end
 		
-		if option == "SLOTWEIGHTS" or option == "STANDBYRANKS" or option == "EPVALS" or option == "AUTOEP" or option == "OVERRIDE" then
+		if option == "LOOTGUIBUTTON" then
+			if args[5] == "true" then
+				CEPGP_response_buttons[tonumber(args[4])] = {
+					[1] = true,
+					[2] = args[6],
+					[3] = tonumber(args[7])
+				}
+			else
+				CEPGP_response_buttons[tonumber(args[4])] = {
+					[1] = false,
+					[2] = args[6],
+					[3] = tonumber(args[7])
+				}
+			end
+		end
+		
+		if option == "LOOTGUIBUTTONTIMEOUT" then
+			CEPGP_response_time = tonumber(args[4]);
+		end
+		
+		if option == "SLOTWEIGHTS" or option == "STANDBYRANKS" or option == "EPVALS" or option == "AUTOEP" or option == "OVERRIDE" or option == "STANDBYSHARE" then
 			local field = args[4];
 			local val = args[5];
 			
@@ -241,6 +314,12 @@ function CEPGP_IncAddonMsg(message, sender)
 				else
 					STANDBYRANKS[tonumber(field)][2] = false;
 				end
+			elseif option == "STANDBYSHARE" then
+				if val == "true" then
+					CEPGP_standby_share = true;
+				else
+					CEPGP_standby_share = false;
+				end
 			elseif option == "EPVALS" then
 				EPVALS[field] = tonumber(val);
 			elseif option == "AUTOEP" then
@@ -250,7 +329,9 @@ function CEPGP_IncAddonMsg(message, sender)
 					AUTOEP[field] = false;
 				end
 			elseif option == "OVERRIDE" then
-				OVERRIDE_INDEX[field] = val;
+				if not CEPGP_inOverride(val) then
+					OVERRIDE_INDEX[field] = val;
+				end
 			end
 		else
 			local val = args[4];
@@ -266,6 +347,12 @@ function CEPGP_IncAddonMsg(message, sender)
 				MOD_COEF = tonumber(val);
 			elseif option == "BASEGP" then
 				BASEGP = tonumber(val);
+			elseif option == "BASEGPFACTOR" then
+				if val == "true" then
+					CEPGP_minGPDecayFactor = true;
+				else
+					CEPGP_minGPDecayFactor = false;
+				end
 			elseif option == "STANDBYBYRANK" then
 				if val == "1" then
 					CEPGP_standby_byrank = true;
@@ -320,18 +407,33 @@ function CEPGP_IncAddonMsg(message, sender)
 		local id = args[2];
 		local gp = args[3];
 		local buttons = {args[4], args[5], args[6], args[7]};
-		CEPGP_callItem(id, gp, buttons);
+		local timeout = args[8];
+		CEPGP_callItem(id, gp, buttons, timeout);
 		
 	elseif strfind(message, "MainSpec") or args[1] == "LootRsp" then
 		local response = args[2];
-		CEPGP_handleComms("CHAT_MSG_WHISPER", CEPGP_keyword, sender, response);
+		CEPGP_handleComms("CHAT_MSG_WHISPER", CEPGP_keyword, sender, response);	
 		
+	elseif args[1] == "?KillUpdate" and sender ~= UnitName("player") and CEPGP_isML() == 0 and CEPGP_use then
+		local name = args[2];
+		local guid = args[3];
+		if not guid then return; end
+		if CEPGP_tContains(CEPGP_kills, guid) then return; end
+		if L[name] == "Zealot Zath" or L[name] == "Zealot Lor'Khan" then
+			CEPGP_handleCombat(name, false, guid);
+		end
+		if L[name] == "Flamewaker Elite" or L[name] == "Flamewaker Healer" then
+			CEPGP_handleCombat(name, true, guid);
+		end
+		if bossNameIndex[L[name]] then
+			CEPGP_handleCombat(name, false, guid);
+		end
 	
 	elseif args[1] == "CEPGP_TRAFFIC" then
 		if string.find(sender, "-") then
 			sender = string.sub(sender, 0, string.find(sender, "-")-1);
 		end
-		if sender == UnitName("player") then return; end
+		if (sender == UnitName("player") or sender ~= args[3]) and not sync then return; end
 		local player = args[2];
 		local issuer = args[3];
 		local action = args[4];

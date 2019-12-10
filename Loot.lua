@@ -128,7 +128,8 @@ function CEPGP_announce(link, x, slotNum, quantity)
 			else
 				call = call .. ";";
 			end
-			CEPGP_callItem(id, gp, buttons);
+			call = call .. ";" .. tostring(CEPGP_response_time);
+			CEPGP_callItem(id, gp, buttons, CEPGP_response_time);
 			CEPGP_SendAddonMsg(call, "RAID");
 			SendChatMessage("NOW DISTRIBUTING: " .. link .. " for " .. gp .. " GP", "RAID_WARNING", CEPGP_LANGUAGE);
 		else
@@ -163,7 +164,7 @@ function CEPGP_announce(link, x, slotNum, quantity)
 		_G["CEPGP_distribute_item_tex"]:SetScript('OnLeave', function() GameTooltip:Hide() end);
 		_G["CEPGP_distribute_GP_value"]:SetText(gp);
 		CEPGP_distributing = true;
-		CEPGP_button_options_loot_gui:Disable();
+		CEPGP_toggleGPEdit(false);
 	elseif GetLootMethod() == "master" then
 		CEPGP_print("You are not the Loot Master.", 1);
 		return;

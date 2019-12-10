@@ -1,7 +1,8 @@
 local L = CEPGP_Locale:GetLocale("CEPGP")
 
 function CEPGP_handleComms(event, arg1, arg2, response)
-	--arg1 = message; arg2 = sender
+	response = tonumber(response);
+	if not response then response = 5; end
 	if event == "CHAT_MSG_WHISPER" and string.lower(arg1) == string.lower(CEPGP_keyword) and CEPGP_distributing then
 		local duplicate = false;
 		for i = 1, table.getn(CEPGP_responses) do
@@ -32,11 +33,18 @@ function CEPGP_handleComms(event, arg1, arg2, response)
 						class = CEPGP_roster[arg2][2];
 						inGuild = true;
 					end
-					CEPGP_SendAddonMsg(arg2..";distslot;"..CEPGP_distSlot, "RAID");
+					if (CEPGP_show_passes and response == 6) or response < 6 or not response then
+						CEPGP_SendAddonMsg(arg2..";distslot;"..CEPGP_distSlot, "RAID");
+					end
 					if CEPGP_distributing then
 						if inGuild and not CEPGP_suppress_announcements then
-							CEPGP_sendChatMessage(arg2 .. " (" .. class .. ") needs. (" .. math.floor((EP/GP)*100)/100 .. " PR)", CEPGP_lootChannel);
-							
+							if response then
+								if response < 5 then	-- 5 means they're not using the addon or they're using an outdated version that doesn't support responses
+									CEPGP_sendChatMessage(arg2 .. " (" .. class .. ") needs (" .. CEPGP_response_buttons[response][2] .. "). (" .. math.floor((EP/GP)*100)/100 .. " PR)", CEPGP_lootChannel);
+								end
+							elseif response == 5 or not response then
+								CEPGP_sendChatMessage(arg2 .. " (" .. class .. ") needs (" .. math.floor((EP/GP)*100)/100 .. " PR)", CEPGP_lootChannel);
+							end
 						elseif not CEPGP_suppress_announcements then
 							local total = GetNumGroupMembers();
 							for i = 1, total do
@@ -44,15 +52,23 @@ function CEPGP_handleComms(event, arg1, arg2, response)
 									_, _, _, _, class = GetRaidRosterInfo(i);
 								end
 							end
-								CEPGP_sendChatMessage(arg2 .. " (" .. class .. ") needs. (Non-guild member)", CEPGP_lootChannel);
+							if response then
+								if response < 5 then
+									CEPGP_sendChatMessage(arg2 .. " (" .. class .. ") needs (" .. CEPGP_response_buttons[response][2] .. "). (Non-guild member)", CEPGP_lootChannel);
+								end
+							elseif response == 5 or not response then
+								CEPGP_sendChatMessage(arg2 .. " (" .. class .. ") needs (Non-guild Member)", CEPGP_lootChannel);
+							end
 						end
-						if CEPGP_isML() == 0 then --If you are the master looter
-							CEPGP_SendAddonMsg("!need;"..arg2..";"..CEPGP_DistID..";"..CEPGP_response_buttons[tonumber(response)][2], "RAID"); --!need;playername;itemID (of the item being distributed) is sent for sharing with raid assist
+						if CEPGP_isML() == 0 and ((CEPGP_show_passes and response == 6) or response < 6 or not response) then --If you are the master looter
+							if not response then response = 5; end
+							print(response);
+							CEPGP_SendAddonMsg("!need;"..arg2..";"..CEPGP_DistID..";"..response, "RAID"); --!need;playername;itemID (of the item being distributed) is sent for sharing with raid assist
 							CEPGP_itemsTable[arg2] = {};
-							CEPGP_itemsTable[arg2] = {[3] = CEPGP_response_buttons[tonumber(response)][2]};
+							CEPGP_itemsTable[arg2][3] = response;
 						end
 					end
-					CEPGP_UpdateLootScrollBar();
+					CEPGP_UpdateLootScrollBar(true);
 				end);
 			else
 				--	Sends an addon message to the person who whispered !need to me
@@ -68,10 +84,18 @@ function CEPGP_handleComms(event, arg1, arg2, response)
 					class = CEPGP_roster[arg2][2];
 					inGuild = true;
 				end
-				CEPGP_SendAddonMsg(arg2..";distslot;"..CEPGP_distSlot, "RAID");
+				if (CEPGP_show_passes and response == 6) or response < 6 or not response then
+					CEPGP_SendAddonMsg(arg2..";distslot;"..CEPGP_distSlot, "RAID");
+				end
 				if CEPGP_distributing then
 					if inGuild and not CEPGP_suppress_announcements then
-						CEPGP_sendChatMessage(arg2 .. " (" .. class .. ") needs. (" .. math.floor((EP/GP)*100)/100 .. " PR)", CEPGP_lootChannel);
+						if response then
+							if response < 5 then
+								CEPGP_sendChatMessage(arg2 .. " (" .. class .. ") needs (" .. CEPGP_response_buttons[response][2] .. "). (" .. math.floor((EP/GP)*100)/100 .. " PR)", CEPGP_lootChannel);
+							end
+						elseif response == 5 or not response then
+							CEPGP_sendChatMessage(arg2 .. " (" .. class .. ") needs (" .. math.floor((EP/GP)*100)/100 .. " PR)", CEPGP_lootChannel);
+						end
 					elseif not CEPGP_suppress_announcements then
 						local total = GetNumGroupMembers();
 						for i = 1, total do
@@ -79,15 +103,22 @@ function CEPGP_handleComms(event, arg1, arg2, response)
 								_, _, _, _, class = GetRaidRosterInfo(i);
 							end
 						end
-						CEPGP_sendChatMessage(arg2 .. " (" .. class .. ") needs. (Non-guild member)", CEPGP_lootChannel);
+						if response then
+							if response < 5 then
+								CEPGP_sendChatMessage(arg2 .. " (" .. class .. ") needs (" .. CEPGP_response_buttons[response][2] .. "). (Non-guild member)", CEPGP_lootChannel);
+							end
+						elseif response == 5 or not response then
+							CEPGP_sendChatMessage(arg2 .. " (" .. class .. ") needs (Non-guild Member)", CEPGP_lootChannel);
+						end
 					end
-					if CEPGP_isML() == 0 then --If you are the master looter
-						CEPGP_SendAddonMsg("!need;"..arg2..";"..CEPGP_DistID..";"..CEPGP_response_buttons[tonumber(response)][2], "RAID"); --!need;playername;itemID (of the item being distributed) is sent for sharing with raid assist
+					if CEPGP_isML() == 0 and ((CEPGP_show_passes and response == 6) or response < 6 or not response) then --If you are the master looter
+						if not response then response = 5; end
+						CEPGP_SendAddonMsg("!need;"..arg2..";"..CEPGP_DistID..";"..response, "RAID"); --!need;playername;itemID (of the item being distributed) is sent for sharing with raid assist
 						CEPGP_itemsTable[arg2] = {};
-						CEPGP_itemsTable[arg2][3] = CEPGP_response_buttons[tonumber(response)][2];
+						CEPGP_itemsTable[arg2][3] = response;						
 					end
 				end
-				CEPGP_UpdateLootScrollBar();
+				CEPGP_UpdateLootScrollBar(true);
 			end
 		end
 	elseif event == "CHAT_MSG_WHISPER" and string.lower(arg1) == "!info" then
@@ -246,8 +277,21 @@ function CEPGP_handleComms(event, arg1, arg2, response)
 	end
 end
 
-function CEPGP_handleCombat(name, except)
-	if name == L["The Prophet Skeram"] or name == L["Majordomo Executus"] and not except then return; end
+function CEPGP_handleCombat(name, except, guid)
+	if (L[name] == "The Prophet Skeram" or L[name] == "Majordomo Executus") and not except then
+		return;
+	end
+	if (L[name] == "Lord Kazzak" or	L[name] == "Azuregos" or
+		L[name] == "Emeriss" or	L[name] == "Lethon" or
+		L[name] == "Ysondre" or	L[name] == "Taerar") and not except then
+			CEPGP_ep_award_confirm:SetAttribute("guid", guid);
+			CEPGP_ep_award_confirm:SetAttribute("name", name);
+			local message = format(L["%s has been defeated! Award %d EP to the raid?"], name, EPVALS[L[name]]);
+			CEPGP_ep_award_confirm_desc:SetText(message);
+			CEPGP_ep_award_confirm:Show();
+			return;
+	end
+	if CEPGP_tContains(CEPGP_kills, guid) then return; end
 	local EP;
 	local isLead;
 	for i = 1, GetNumGroupMembers() do
@@ -256,17 +300,25 @@ function CEPGP_handleCombat(name, except)
 		end
 	end
 	if (((GetLootMethod() == "master" and CEPGP_isML() == 0) or (GetLootMethod() == "group" and isLead == 2)) and CEPGP_ntgetn(CEPGP_roster) > 0) or CEPGP_debugMode then
-		local success = CEPGP_getCombatModule(name);
-		if name == L["Zealot Zath"] or name == L["Zealot Lor'Khan"] then
-			name = L["High Priest Thekal"];
-		elseif name == L["Flamewaker Elite"] or name == L["Flamewaker Healer"] then
-			name = L["Majordomo Executus"];
+		local success = CEPGP_getCombatModule(name, guid);
+		if not L[CEPGP_combatModule] then
+			for k, v in pairs(L) do
+				if v == CEPGP_combatModule then
+					CEPGP_combatModule = k;
+					break;
+				end
+			end
 		end
-		EP = tonumber(EPVALS[name]);
-		if AUTOEP[name] and EP > 0 and success then
-			local plurals = CEPGP_combatModule == L["The Four Horsemen"] or CEPGP_combatModule == L["The Bug Trio"] or CEPGP_combatModule == L["The Twin Emperors"]
+		if L[name] == "Zealot Zath" or L[name] == "Zealot Lor'Khan" then
+			name = "High Priest Thekal";
+		elseif L[name] == "Flamewaker Elite" or L[name] == "Flamewaker Healer" then
+			name = "Majordomo Executus";
+		end
+		EP = tonumber(EPVALS[L[name]]);
+		if (AUTOEP[L[name]] or except) and EP > 0 and success then
+			local plurals = L[CEPGP_combatModule] == "The Four Horsemen" or L[CEPGP_combatModule] == "The Bug Trio" or L[CEPGP_combatModule] == "The Twin Emperors";
 			local message = format(L["%s " .. (plurals and "have" or "has") .. " been defeated! %d EP has been awarded to the raid"], CEPGP_combatModule, EP);
-			CEPGP_AddRaidEP(EP, message, CEPGP_combatModule);
+			CEPGP_AddRaidEP(EP, message, L[CEPGP_combatModule]);
 			if STANDBYEP and tonumber(STANDBYPERCENT) > 0 then
 				CEPGP_addStandbyEP(EP*(tonumber(STANDBYPERCENT)/100), CEPGP_combatModule);
 			end
@@ -275,12 +327,14 @@ function CEPGP_handleCombat(name, except)
 	end
 end
 
-function CEPGP_getCombatModule(name)
+function CEPGP_getCombatModule(name, guid)
 	--Majordomo Executus
-	if name == L["Flamewaker Elite"] or name == L["Flamewaker Healer"] then
-		CEPGP_kills = CEPGP_kills + 1;
-		if CEPGP_kills == 8 then
-			CEPGP_combatModule = L["Majordomo Executus"];
+	if L[name] == "Flamewaker Elite" or L[name] == "Flamewaker Healer" then
+		if not CEPGP_tContains(CEPGP_kills, guid) then
+			CEPGP_kills[#CEPGP_kills+1] = guid;
+		end
+		if #CEPGP_kills == 8 then
+			CEPGP_combatModule = "Majordomo Executus";
 			return true;
 		else
 			return false;
@@ -288,9 +342,9 @@ function CEPGP_getCombatModule(name)
 	end
 
 	--Razorgore the Untamed
-	if name == L["Razorgore the Untamed"] then
-		if CEPGP_kills == 30 then --For this encounter, CEPGP_kills is used for the eggs
-			CEPGP_combatModule = L["Razorgore the Untamed"];
+	if L[name] == "Razorgore the Untamed" then
+		if #CEPGP_kills == 30 then --For this encounter, CEPGP_kills is used for the eggs
+			CEPGP_combatModule = "Razorgore the Untamed";
 			return true;
 		else
 			return false;
@@ -298,14 +352,14 @@ function CEPGP_getCombatModule(name)
 	end
 
 	-- High Priest Thekal
-	if name == L["Zealot Lor'Khan"] or name == L["Zealot Zath"] or name == L["High Priest Thekal"] then
-		CEPGP_combatModule = L["High Priest Thekal"];
+	if L[name] == "Zealot Lor'Khan" or L[name] == "Zealot Zath" or L[name] == "High Priest Thekal" then
+		CEPGP_combatModule = "High Priest Thekal";
 		if CEPGP_THEKAL_PARAMS["LOR'KHAN_DEAD"] and CEPGP_THEKAL_PARAMS["ZATH_DEAD"] and CEPGP_THEKAL_PARAMS["THEKAL_DEAD"] then
 			return true;
 		else
-			if name == L["Zealot Lor'Khan"] then
+			if L[name] == "Zealot Lor'Khan" then
 			CEPGP_THEKAL_PARAMS["LOR'KHAN_DEAD"] = true;
-		elseif name == L["Zealot Zath"] then
+		elseif L[name] == "Zealot Zath" then
 			CEPGP_THEKAL_PARAMS["ZATH_DEAD"] = true;
 		else
 			CEPGP_THEKAL_PARAMS["THEKAL_DEAD"] = true;
@@ -315,16 +369,18 @@ function CEPGP_getCombatModule(name)
 	end
 
 	-- The Edge of Madness
-	if name == L["Gri'lek"] or name == L["Hazza'rah"] or name == L["Renataki"] or name == L["Wushoolay"] then
-		CEPGP_combatModule = L["The Edge of Madness"];
+	if L[name] == "Gri'lek" or L[name] == "Hazza'rah" or L[name] == "Renataki" or L[name] == "Wushoolay" then
+		CEPGP_combatModule = "The Edge of Madness";
 		return true;
 	end
 
 	-- Bug Trio
-	if name == L["Princess Yauj"] or name == L["Vem"] or name == L["Lord Kri"] then
+	if L[name] == "Princess Yauj" or L[name] == "Vem" or L[name] == "Lord Kri" then
 		CEPGP_combatModule = L["The Bug Trio"];
-		CEPGP_kills = CEPGP_kills + 1;
-		if CEPGP_kills == 3 then
+		if not CEPGP_tContains(CEPGP_kills, guid) then
+			CEPGP_kills[#CEPGP_kills+1] = guid;
+		end
+		if #CEPGP_kills == 3 then
 			return true;
 		else
 			return false;
@@ -332,10 +388,12 @@ function CEPGP_getCombatModule(name)
 	end
 
 	-- Twin Emperors
-	if name == L["Emperor Vek'lor"] or name == L["Emperor Vek'nilash"] then
-		CEPGP_combatModule = L["The Twin Emperors"];
-		CEPGP_kills = CEPGP_kills + 1;
-		if CEPGP_kills == 2 then
+	if L[name] == "Emperor Vek'lor" or L[name] == "Emperor Vek'nilash" then
+		CEPGP_combatModule = "The Twin Emperors";
+		if not CEPGP_tContains(CEPGP_kills, guid) then
+			CEPGP_kills[#CEPGP_kills+1] = guid;
+		end
+		if #CEPGP_kills == 2 then
 			return true;
 		else
 			return false;
@@ -343,18 +401,21 @@ function CEPGP_getCombatModule(name)
 	end
 
 	-- The Four Horseman
-	if name == L["Highlord Mograine"] or name == L["Thane Korth'azz"] or name == L["Lady Blaumeux"] or name == L["Sir Zeliek"] then
-		CEPGP_combatModule = L["The Four Horsemen"];
-		CEPGP_kills = CEPGP_kills + 1;
-		if CEPGP_kills == 4 then
+	if L[name] == "Highlord Mograine" or L[name] == "Thane Korth'azz" or L[name] == "Lady Blaumeux" or L[name] == "Sir Zeliek" then
+		CEPGP_combatModule = "The Four Horsemen";
+		if not CEPGP_tContains(CEPGP_kills, guid) then
+			CEPGP_kills[#CEPGP_kills+1] = guid;
+		end
+		if #CEPGP_kills == 4 then
 			return true;
 		else
 			return false;
 		end
 	end
 	
-	CEPGP_combatModule = name;
-	return name;
+	CEPGP_kills[#CEPGP_kills+1] = guid;
+	CEPGP_combatModule = L[name];
+	return L[name];
 end
 
 function CEPGP_handleLoot(event, arg1, arg2)
@@ -363,6 +424,7 @@ function CEPGP_handleLoot(event, arg1, arg2)
 			CEPGP_SendAddonMsg("LootClosed;", "RAID");
 		end
 		CEPGP_distributing = false;
+		CEPGP_toggleGPEdit(true);
 		CEPGP_button_options_loot_gui:Enable();
 		CEPGP_distItemLink = nil;
 		_G["distributing"]:Hide();
@@ -401,18 +463,42 @@ function CEPGP_handleLoot(event, arg1, arg2)
 		ShowUIPanel(CEPGP_button_loot_dist);
 
 	elseif event == "LOOT_SLOT_CLEARED" then
-		if CEPGP_isML() == 0 then
-			CEPGP_SendAddonMsg("RaidAssistLootClosed", "RAID");
-		end
 		if CEPGP_distributing and arg1 == CEPGP_lootSlot then --Confirms that an item is currently being distributed and that the item taken is the one in question
 			if CEPGP_distPlayer ~= "" and CEPGP_award then
 				CEPGP_distributing = false;
+				CEPGP_toggleGPEdit(true);
 				CEPGP_button_options_loot_gui:Enable();
+				if CEPGP_isML() == 0 then
+					CEPGP_SendAddonMsg("RaidAssistLootClosed", "RAID");
+					CEPGP_SendAddonMsg("LootClosed;", "RAID");
+				end
+				local response;
+				if CEPGP_distribute_popup:GetAttribute("responseName") then
+					response = CEPGP_distribute_popup:GetAttribute("responseName");
+				end
 				if CEPGP_distGP then
-					SendChatMessage("Awarded " .. _G["CEPGP_distribute_item_name"]:GetText() .. " to ".. CEPGP_distPlayer .. " for " .. CEPGP_distribute_GP_value:GetText()*CEPGP_rate .. " GP", CHANNEL, CEPGP_LANGUAGE);
-					CEPGP_addGP(CEPGP_distPlayer, CEPGP_distribute_GP_value:GetText()*CEPGP_rate, CEPGP_DistID, CEPGP_distItemLink);
+					if response then
+						SendChatMessage("Awarded " .. _G["CEPGP_distribute_item_name"]:GetText() .. " to ".. CEPGP_distPlayer .. " for " .. CEPGP_distribute_GP_value:GetText()*CEPGP_rate .. " GP (" .. response .. ")", CHANNEL, CEPGP_LANGUAGE);
+					else
+						SendChatMessage("Awarded " .. _G["CEPGP_distribute_item_name"]:GetText() .. " to ".. CEPGP_distPlayer .. " for " .. CEPGP_distribute_GP_value:GetText()*CEPGP_rate .. " GP", CHANNEL, CEPGP_LANGUAGE);
+					end
+					CEPGP_addGP(CEPGP_distPlayer, CEPGP_distribute_GP_value:GetText()*CEPGP_rate, CEPGP_DistID, CEPGP_distItemLink, _, response);
 				else
 					SendChatMessage("Awarded " .. _G["CEPGP_distribute_item_name"]:GetText() .. " to ".. CEPGP_distPlayer .. " for free", CHANNEL, CEPGP_LANGUAGE);
+					local offNote = CEPGP_roster[CEPGP_distPlayer][5];
+					local EP, GP = CEPGP_getEPGP(offNote);
+					TRAFFIC[CEPGP_ntgetn(TRAFFIC)+1] = {
+						[1] = CEPGP_distPlayer,
+						[2] = UnitName("player"),
+						[3] = "Given for Free",
+						[4] = EP,
+						[5] = EP,
+						[6] = GP,
+						[7] = GP,
+						[8] = CEPGP_distItemLink,
+						[9] = time()
+					};
+					CEPGP_ShareTraffic(CEPGP_distPlayer, UnitName("player"), "Given for Free", EP, EP, GP, GP, CEPGP_DistID);
 				end
 				CEPGP_distPlayer = "";
 				CEPGP_distribute_popup:Hide();
@@ -421,8 +507,21 @@ function CEPGP_handleLoot(event, arg1, arg2)
 				CEPGP_loot:Show();
 			else
 				CEPGP_distributing = false;
+				CEPGP_toggleGPEdit(true);
 				CEPGP_button_options_loot_gui:Enable();
 				SendChatMessage(_G["CEPGP_distribute_item_name"]:GetText() .. " has been distributed without EPGP", CHANNEL, CEPGP_LANGUAGE);
+				TRAFFIC[CEPGP_ntgetn(TRAFFIC)+1] = {
+					[1] = CEPGP_distPlayer,
+					[2] = UnitName("player"),
+					[3] = "Not EPGP Moderated",
+					[4] = EP,
+					[5] = EP,
+					[6] = GP,
+					[7] = GP,
+					[8] = CEPGP_distItemLink,
+					[9] = time()
+				};
+				CEPGP_ShareTraffic(CEPGP_distPlayer, UnitName("player"), "Not EPGP Moderated", EP, EP, GP, GP, CEPGP_DistID);
 				CEPGP_distribute_popup:Hide();
 				CEPGP_distribute:Hide();
 				_G["distributing"]:Hide();

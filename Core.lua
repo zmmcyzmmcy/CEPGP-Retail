@@ -1,5 +1,5 @@
 --[[ Globals ]]--
-CEPGP_VERSION = "1.12.8";
+CEPGP_VERSION = "1.12.8.beta-6";
 SLASH_CEPGP1 = "/CEPGP";
 SLASH_CEPGP2 = "/cep";
 CEPGP_VERSION_NOTIFIED = false;
@@ -23,7 +23,7 @@ CEPGP_confirmrestore = false;
 CEPGP_looting = false;
 CEPGP_traffic_clear = false;
 CEPGP_criteria = 4;
-CEPGP_kills = 0;
+CEPGP_kills = {};
 CEPGP_frames = {CEPGP_guild, CEPGP_raid, CEPGP_loot, CEPGP_distribute, CEPGP_options, CEPGP_options_page_2, CEPGP_options_page_3, CEPGP_distribute_popup, CEPGP_context_popup, CEPGP_save_guild_logs, CEPGP_restore_guild_logs, CEPGP_settings_import, CEPGP_override, CEPGP_traffic, CEPGP_standby};
 CEPGP_boss_config_frames = {CEPGP_options_page_3_mc, CEPGP_options_page_3_bwl, CEPGP_options_page_3_zg, CEPGP_options_page_3_aq20, CEPGP_options_page_3_aq40, CEPGP_options_page_3_naxx, CEPGP_options_page_3_worldboss};
 CEPGP_LANGUAGE = GetDefaultLanguage("player");
@@ -43,6 +43,7 @@ CEPGP_ignoreUpdates = false;
 CEPGP_award = false;
 CEPGP_rate = 1;
 CEPGP_plugins = {};
+CEPGP_response_stop = false;
 
 --[[ SAVED VARIABLES ]]--
 CHANNEL = nil;
@@ -66,8 +67,7 @@ CEPGP_notice = false;
 CEPGP_loot_GUI = false;
 CEPGP_auto_pass = false;
 CEPGP_raid_wide_dist = false;
-CEPGP_1120_notice = false;
-CEPPG_gp_tooltips = false;
+CEPGP_gp_tooltips = false;
 CEPGP_suppress_announcements = false;
 STANDBYPERCENT = nil;
 STANDBYRANKS = {};
@@ -81,13 +81,16 @@ TRAFFIC = {};
 CEPGP_raid_logs = {};
 CEPGP_standbyRoster = {};
 CEPGP_minEP = {false, 0};
-CEPGP_response_buttons = {[1]={true, "Main Spec", 0},[2]={false, "Off Spec", 0},[3]={false, "Disenchant", 0},[4]={false, "", 0}};
+CEPGP_response_buttons = {[1]={true, "Main Spec", 0},[2]={false, "Off Spec", 0},[3]={false, "Disenchant", 0},[4]={false, "", 0},[5]={false, "", 0},[6]={false, "Pass", 100}};
+CEPGP_response_time = 60;
+CEPGP_show_passes = false;
+CEPGP_PR_sort = true;
 
 local L = CEPGP_Locale:GetLocale("CEPGP")
 
 
 --[[ EVENT AND COMMAND HANDLER ]]--
-function CEPGP_OnEvent(event, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9)
+function CEPGP_OnEvent(event, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10, arg11, arg12, arg13, arg14, arg15, arg16, arg17)
 	
 	if event == "ADDON_LOADED" and arg1 == "CEPGP" then --arg1 = addon name
 		CEPGP_initialise();
@@ -107,11 +110,12 @@ function CEPGP_OnEvent(event, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, ar
 		end
 	elseif event == "CHAT_MSG_BN_WHISPER" then
 		local sender = arg2;
+		if not UnitInRaid("player") then return; end
 		for i = 1, BNGetNumFriends() do
 			local _, accName, _, _, name = BNGetFriendInfo(i);
 			local inRaid = false;
-			for i = 1, GetNumGroupMembers() do
-				if CEPGP_raidRoster[i][1] == GetRaidRosterInfo(i) then
+			for x = 1, GetNumGroupMembers() do
+				if CEPGP_raidRoster[x][1] == name then
 					inRaid = true;
 					break;
 				end
@@ -151,44 +155,81 @@ function CEPGP_OnEvent(event, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, ar
 			end
 			CEPGP_IncAddonMsg(arg2, arg4);
 		end
+	end
 	
-	elseif CEPGP_use then --EPGP and loot distribution related 
+	if event == "COMBAT_LOG_EVENT_UNFILTERED" then
+		local _, action, _, _, _, _, _, guid, name = CombatLogGetCurrentEventInfo();
+		if action == "UNIT_DIED" and string.find(guid, "Creature") then
+			CEPGP_SendAddonMsg("?KillUpdate;" .. name .. ";" .. guid, "RAID");
+			if L[name] == "Zealot Zath" or L[name] == "Zealot Lor'Khan" then
+				CEPGP_SendAddonMsg("?KillUpdate;" .. name .. ";" .. guid, "RAID");
+				return;
+			end
+			if L[name] == "Flamewaker Elite" or L[name] == "Flamewaker Healer" then
+				CEPGP_SendAddonMsg("?KillUpdate;" .. name .. ";" .. guid, "RAID");
+				return;
+			end
+			if bossNameIndex[L[name]] then
+				CEPGP_SendAddonMsg("?KillUpdate;" .. name .. ";" .. guid, "RAID");
+				return;
+			end
+		end
+	end
+	if event == "CHAT_MSG_MONSTER_YELL" then
+		local name = arg2;
+		local guid = arg12;
+		if L[arg2] == "The Prophet Skeram" then
+			if arg1 == L["You only delay... the inevetable."] then
+				local name = arg2;
+				local guid = arg12;
+				CEPGP_handleCombat(name, true, guid);
+				CEPGP_SendAddonMsg("?KillUpdate;" .. name .. ";" .. guid, "RAID");
+			end
+		end
+	end
+	
+	if CEPGP_use then --EPGP and loot distribution related 
 		if event == "COMBAT_LOG_EVENT_UNFILTERED" then
 			local _, action, _, _, _, _, _, guid, name = CombatLogGetCurrentEventInfo();
 			if action == "UNIT_DIED" and string.find(guid, "Creature") then
-				if name == L["Zealot Zath"] or name == L["Zealot Lor'Khan"] then
-					CEPGP_handleCombat(name);
+				if L[name] == "Zealot Zath" or L[name] == "Zealot Lor'Khan" then
+					CEPGP_handleCombat(name, false, guid);
 					return;
 				end
-				if name == L["Flamewaker Elite"] or name == L["Flamewaker Healer"] then
-					CEPGP_handleCombat(name, true);
+				if L[name] == "Flamewaker Elite" or L[name] == "Flamewaker Healer" then
+					CEPGP_handleCombat(name, true, guid);
+					return;
 				end
-				if bossNameIndex[name] then
-					CEPGP_handleCombat(name);
+				if bossNameIndex[L[name]] then
+					CEPGP_handleCombat(name, false, guid);
+					return;
 				end
-			elseif action == "SPELL_CAST_SUCCESS" then
-				local spellID, spellName;
-				_, _, _, _, name, _, _, _, _, _, _, spellID = CombatLogGetCurrentEventInfo();
-				if name == L["Razorgore the Untamed"] and spellID == 19873 then --Razorgore casts destroy egg
-					CEPGP_kills = CEPGP_kills + 1;
-				end
+			end
+		elseif event == "UNIT_SPELLCAST_SUCCEEDED" then
+			local unit, signature, spellID = UnitName(arg1), arg2, arg3;
+			if L[unit] == "Razorgore the Untamed" and spellID == 19873 then --Razorgore casts destroy egg
+				CEPGP_kills[#CEPGP_kills+1] = signature;
+				CEPGP_SendAddonMsg("?KillUpdate;" .. name .. ";" .. signature);
 			end
 			
 		elseif event == "CHAT_MSG_MONSTER_EMOTE" then
 			if arg1 == L["%s is resurrected by a nearby ally!"] then
-				if arg2 == L["Zealot Lor'Khan"] then
+				if L[arg2] == "Zealot Lor'Khan" then
 					CEPGP_THEKAL_PARAMS["LOR'KHAN_DEAD"] = false;
-				elseif arg2 == L["Zealot Zath"] then
+				elseif L[arg2] == "Zealot Zath" then
 					CEPGP_THEKAL_PARAMS["ZATH_DEAD"] = false;
-				elseif arg2 == L["High Priest Thekal"] and not (CEPGP_THEKAL_PARAMS["LOR'KHAN_DEAD"] or CEPGP_THEKAL_PARAMS["ZATH_DEAD"]) then
+				elseif L[arg2] == "High Priest Thekal" and not (CEPGP_THEKAL_PARAMS["LOR'KHAN_DEAD"] or CEPGP_THEKAL_PARAMS["ZATH_DEAD"]) then
 					CEPGP_THEKAL_PARAMS["THEKAL_DEAD"] = false;
 				end
 			end
 			
 		elseif event == "CHAT_MSG_MONSTER_YELL" then
-			if arg2 == L["The Prophet Skeram"] then
+			if L[arg2] == "The Prophet Skeram" then
 				if arg1 == L["You only delay... the inevetable."] then
-					CEPGP_handleCombat(arg2, true);
+					local name = arg2;
+					local guid = arg12;
+					CEPGP_handleCombat(name, true, guid);
+					CEPGP_SendAddonMsg("?KillUpdate;" .. name .. ";" .. guid, "RAID");
 				end
 			end
 			
@@ -199,7 +240,7 @@ function CEPGP_OnEvent(event, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, ar
 			if CEPGP_debugMode then
 				CEPGP_print("Combat started");
 			end
-			CEPGP_kills = 0;
+			CEPGP_kills = {};
 			CEPGP_THEKAL_PARAMS = {["ZATH_DEAD"] = false, ["LOR'KHAN_DEAD"] = false, ["THEKAL_DEAD"] = false};
 		end
 	end
@@ -207,6 +248,7 @@ end
 
 function SlashCmdList.CEPGP(msg, editbox)
 	msg = string.lower(msg);
+	
 	if msg == "" then
 		CEPGP_print("Classic EPGP Usage");
 		CEPGP_print("|cFF80FF80show|r - |cFFFF8080Manually shows the CEPGP window|r");
@@ -563,7 +605,7 @@ function CEPGP_addStandbyEP(amount, boss, msg)
 	CEPGP_UpdateStandbyScrollBar();
 end
 
-function CEPGP_addGP(player, amount, itemID, itemLink, msg)
+function CEPGP_addGP(player, amount, itemID, itemLink, msg, response)
 	if amount == nil then
 		CEPGP_print("Please enter a valid number", 1);
 		return;
@@ -589,10 +631,10 @@ function CEPGP_addGP(player, amount, itemID, itemLink, msg)
 		end
 		GuildRosterSetOfficerNote(index, EP .. "," .. GP);
 		if not itemID then
-			if tonumber(amount) <= 0 then -- Number is negative or 0
+			if tonumber(amount) < 0 then -- Number is negative
 				amount = string.sub(amount, 2, string.len(amount));
 				if msg ~= "" and msg ~= nil then
-					CEPGP_sendChatMessage(amount .. " GP taken from " .. player .. "(" .. msg .. ")", CHANNEL);
+					CEPGP_sendChatMessage(amount .. " GP taken from " .. player .. " (" .. msg .. ")", CHANNEL);
 					CEPGP_ShareTraffic(player, UnitName("player"), "Subtract GP " .. amount .. " (" .. msg .. ")", EP, EP, GP - amount, GPB);
 					TRAFFIC[CEPGP_ntgetn(TRAFFIC)+1] = {
 						[1] = player,
@@ -652,17 +694,31 @@ function CEPGP_addGP(player, amount, itemID, itemLink, msg)
 				_, itemLink = GetItemInfo(tonumber(itemID));
 			end
 			if msg ~= "" and msg ~= nil then
-				TRAFFIC[CEPGP_ntgetn(TRAFFIC)+1] = {
-					[1] = player,
-					[2] = UnitName("player"),
-					[3] = "Add GP " .. amount .. " (" .. msg .. ")",
-					[4] = EP,
-					[5] = EP,
-					[6] = GPB,
-					[7] = GP,
-					[8] = itemLink,
-					[9] = time()
-				};
+				if response then
+					TRAFFIC[CEPGP_ntgetn(TRAFFIC)+1] = {
+						[1] = player,
+						[2] = UnitName("player"),
+						[3] = "Add GP " .. amount .. " (" .. response .. ")",
+						[4] = EP,
+						[5] = EP,
+						[6] = GPB,
+						[7] = GP,
+						[8] = itemLink,
+						[9] = time()
+					};
+				else
+					TRAFFIC[CEPGP_ntgetn(TRAFFIC)+1] = {
+						[1] = player,
+						[2] = UnitName("player"),
+						[3] = "Add GP " .. amount .. " (" .. msg .. ")",
+						[4] = EP,
+						[5] = EP,
+						[6] = GPB,
+						[7] = GP,
+						[8] = itemLink,
+						[9] = time()
+					};
+				end
 			else
 				TRAFFIC[CEPGP_ntgetn(TRAFFIC)+1] = {
 					[1] = player,
@@ -676,20 +732,12 @@ function CEPGP_addGP(player, amount, itemID, itemLink, msg)
 					[9] = time()
 				};
 			end
-			if itemLink then
-				if msg ~= "" and msg ~= nil then
-					TRAFFIC[CEPGP_ntgetn(TRAFFIC)][8] = itemLink;
-					CEPGP_ShareTraffic(player, UnitName("player"), "Add GP " .. amount .. " (" .. msg .. ")", EP, EP, GPB, GP, itemID);
-				else
-					CEPGP_ShareTraffic(player, UnitName("player"), "Add GP " .. amount, EP, EP, GPB, GP, itemID);
-				end
+			if msg ~= "" and msg ~= nil then
+				CEPGP_ShareTraffic(player, UnitName("player"), "Add GP " .. amount .. " (" .. msg .. ")", EP, EP, GPB, GP, itemID);
+			elseif response then
+				CEPGP_ShareTraffic(player, UnitName("player"), "Add GP " .. amount .. " (" .. response .. ")", EP, EP, GPB, GP, itemID);
 			else
-				if msg ~= "" and msg ~= nil then
-					CEPGP_ShareTraffic(player, UnitName("player"), "Add GP " .. amount .. " (" .. msg .. ")", EP, EP, GPB, GP);
-				else
-					CEPGP_ShareTraffic(player, UnitName("player"), "Add GP " .. amount, EP, EP, GPB, GP);
-				end
-				
+				CEPGP_ShareTraffic(player, UnitName("player"), "Add GP " .. amount, EP, EP, GPB, GP, itemID);
 			end
 		end
 		CEPGP_UpdateTrafficScrollBar();

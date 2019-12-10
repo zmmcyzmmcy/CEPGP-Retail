@@ -89,7 +89,6 @@ bossNameIndex = {
     -- world bosses --
     [L["Doom Lord Kazzak"]] = 7,
     [L["Azuregos"]] = 7,
-    [L["Teremus the Devourer"]] = 7,
     [L["Emeriss"]] = 7,
     [L["Lethon"]] = 7,
     [L["Ysondre"]] = 7,

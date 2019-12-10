@@ -1,4 +1,4 @@
-function CEPGP_UpdateLootScrollBar()
+function CEPGP_UpdateLootScrollBar(sort)
 	local tempTable = {};
 	local count = 1;
 	for name, id in pairs(CEPGP_itemsTable) do
@@ -45,12 +45,15 @@ function CEPGP_UpdateLootScrollBar()
 		end		
 		count = count + 1;
 	end
-	tempTable = CEPGP_tSort(tempTable, CEPGP_criteria);
+	if sort and CEPGP_PR_sort then
+		tempTable = CEPGP_sortDistList(tempTable);
+	end
+	--tempTable = CEPGP_tSort(tempTable, CEPGP_criteria);
 	local kids = {_G["CEPGP_dist_scrollframe_container"]:GetChildren()};
 	for _, child in ipairs(kids) do
 		child:Hide();
 	end
-	for i = 1, CEPGP_ntgetn(tempTable) do
+	for i = 1, #tempTable do
 		if not _G["LootDistButton" .. i] then
 			local frame = CreateFrame('Button', "LootDistButton" .. i, _G["CEPGP_dist_scrollframe_container"], "LootDistButtonTemplate");
 			if i > 1 then
@@ -59,13 +62,8 @@ function CEPGP_UpdateLootScrollBar()
 				_G["LootDistButton" .. i]:SetPoint("TOPLEFT", _G["CEPGP_dist_scrollframe_container"], "TOPLEFT", 0, -10);
 			end
 		end
-		local response;
-		for x = 1, 4 do
-			if tempTable[i][11] == CEPGP_response_buttons[x][2] then
-				response = x;
-				break;
-			end
-		end
+		local response = tempTable[i][11];
+		tempTable[i][11] = CEPGP_response_buttons[tonumber(response)][2];
 		if tempTable[i][8] ~= "noitem" or tempTable[i][9] ~= "noitem" then
 			if tempTable[i][8] ~= "noitem" then
 				local id = tonumber(tempTable[i][8]);
@@ -348,24 +346,25 @@ function CEPGP_UpdateRaidScrollBar()
 				[1] = name,
 				[2] = CEPGP_roster[name][2], --Class
 				[3] = CEPGP_roster[name][3], --Rank
-				[4] = EP,
-				[5] = GP,
-				[6] = math.floor((tonumber(EP)/tonumber(GP))*100)/100,
-				[7] = CEPGP_roster[name][7] --Class in English
+				[4] = CEPGP_roster[name][4], --RankIndex
+				[5] = EP,
+				[6] = GP,
+				[7] = math.floor((tonumber(EP)/tonumber(GP))*100)/100,
+				[8] = CEPGP_roster[name][7] --Class in English
 			};
 		else
 			tempTable[i] = {
 				[1] = name,
 				[2] = CEPGP_raidRoster[i][2], --Class
 				[3] = CEPGP_raidRoster[i][3], --Rank
-				[4] = CEPGP_raidRoster[i][4], --EP
-				[5] = CEPGP_raidRoster[i][5], --GP
-				[6] = CEPGP_raidRoster[i][6], --PR
-				[7] = CEPGP_raidRoster[i][8]  --Class in English
+				[4] = CEPGP_raidRoster[i][4], --RankIndex
+				[5] = CEPGP_raidRoster[i][5], --EP
+				[6] = CEPGP_raidRoster[i][6], --GP
+				[7] = CEPGP_raidRoster[i][7], --PR
+				[8] = CEPGP_raidRoster[i][8]  --Class in English
 			};
 		end
 		
-		if not tempTable[i][3] then tempTable[i][3] = CEPGP_raidRoster[i][3]; end
 	end
 	tempTable = CEPGP_tSort(tempTable, CEPGP_criteria);
 	local kids = {_G["CEPGP_raid_scrollframe_container"]:GetChildren()};
@@ -381,7 +380,7 @@ function CEPGP_UpdateRaidScrollBar()
 				_G["RaidButton" .. i]:SetPoint("TOPLEFT", _G["CEPGP_raid_scrollframe_container"], "TOPLEFT", 0, -10);
 			end
 		end
-		local colour = RAID_CLASS_COLORS[string.upper(tempTable[i][7])];
+		local colour = RAID_CLASS_COLORS[string.upper(tempTable[i][8])];
 		if not colour then
 			colour = {
 			r = 1,
@@ -396,11 +395,11 @@ function CEPGP_UpdateRaidScrollBar()
 		_G["RaidButton" .. i .. "Class"]:SetTextColor(colour.r, colour.g, colour.b);
 		_G["RaidButton" .. i .. "Rank"]:SetText(tempTable[i][3]);
 		_G["RaidButton" .. i .. "Rank"]:SetTextColor(colour.r, colour.g, colour.b);
-		_G["RaidButton" .. i .. "EP"]:SetText(tempTable[i][4]);
+		_G["RaidButton" .. i .. "EP"]:SetText(tempTable[i][5]);
 		_G["RaidButton" .. i .. "EP"]:SetTextColor(colour.r, colour.g, colour.b);
-		_G["RaidButton" .. i .. "GP"]:SetText(tempTable[i][5]);
+		_G["RaidButton" .. i .. "GP"]:SetText(tempTable[i][6]);
 		_G["RaidButton" .. i .. "GP"]:SetTextColor(colour.r, colour.g, colour.b);
-		_G["RaidButton" .. i .. "PR"]:SetText(string.format("%.2f", tempTable[i][6]));
+		_G["RaidButton" .. i .. "PR"]:SetText(string.format("%.2f", tempTable[i][7]));
 		_G["RaidButton" .. i .. "PR"]:SetTextColor(colour.r, colour.g, colour.b);
 	end
 end
@@ -468,53 +467,54 @@ function CEPGP_UpdateVersionScrollBar()
 end
 
 function CEPGP_UpdateOverrideScrollBar()
-	if OVERRIDE_INDEX == nil then
-		return;
+	local tempTable = {};
+	local items = {};
+	local kids = {_G["CEPGP_override_scrollframe_container"]:GetChildren()};
+	for _, child in ipairs(kids) do
+		child:Hide();
 	end
-	local x, y;
-	local yoffset;
-	local t;
-	local tSize;
-	local item;
-	local gp;
-	local colour;
-	local quality;
-	t = {};
-	tSize = CEPGP_ntgetn(OVERRIDE_INDEX);
-	if tSize == 0 then
-		for y = 1, 18, 1 do
-			_G["CEPGP_overrideButton" .. y]:Hide();
-		end
-	end
-	local count = 1;
 	for k, v in pairs(OVERRIDE_INDEX) do
-		t[count] = {
-			[1] = k,
-			[2] = v
-		};
-		count = count + 1;
-	end
-	FauxScrollFrame_Update(CEPGP_overrideScrollFrame, tSize, 18, 15);
-	for y = 1, 18, 1 do
-		yoffset = y + FauxScrollFrame_GetOffset(CEPGP_overrideScrollFrame);
-		if (yoffset <= tSize) then
-			if not CEPGP_tContains(t, yoffset, true) then
-				_G["CEPGP_overrideButton" .. y]:Hide();
-			else
-				t2 = t[yoffset];
-				item = t2[1];
-				gp = t2[2];
-				quality = t2[3];
-				_G["CEPGP_overrideButton" .. y .. "item"]:SetText(item);
-				_G["CEPGP_overrideButton" .. y .. "GP"]:SetText(gp);
-				_G["CEPGP_overrideButton" .. y .. "GP"]:SetTextColor(1, 1, 1);
-				_G["CEPGP_overrideButton" .. y]:Show();
-			end
+		local name = GetItemInfo(k);
+		if name then
+			table.insert(items, name);
 		else
-			_G["CEPGP_overrideButton" .. y]:Hide();
+			table.insert(items, k);
 		end
 	end
-	x, y, yoffset, t, tSize, item, gp, colour, quality = nil;
+	table.sort(items);
+	for i, v in ipairs(items) do
+		for link, gp in pairs(OVERRIDE_INDEX) do
+			local name = GetItemInfo(link);
+			if name == v then
+				tempTable[i] = {
+					[link] = gp
+				};
+				break;
+			elseif not name and link == v then
+				tempTable[i] = {
+					[link] = gp
+				};
+				break;				
+			end
+		end
+	end
+	for i = 1, #tempTable do
+		if not _G["CEPGP_overrideButton" ..  i] then
+			local frame = CreateFrame('Button', "overrideButton" .. i, _G["CEPGP_override_scrollframe_container"], "lootOverrideButtonTemplate"); -- Creates override frames if needed
+			if i > 1 then
+				_G["overrideButton" .. i]:SetPoint("TOPLEFT", _G["overrideButton" .. i-1], "BOTTOMLEFT", 0, -2);
+			else
+				_G["overrideButton" .. i]:SetPoint("TOPLEFT", _G["CEPGP_override_scrollframe_container"], "TOPLEFT", 5, -6);
+			end
+		end
+		for item, gp in pairs(tempTable[i]) do
+			_G["overrideButton" .. i]:Show();
+			_G["overrideButton" .. i .. "item"]:SetText(item);
+			_G["overrideButton" .. i .. "GP"]:SetText(OVERRIDE_INDEX[item]);
+			_G["overrideButton" .. i .. "GP"]:SetTextColor(1, 1, 1);
+			break;
+		end
+	end
 end
 
 function CEPGP_UpdateTrafficScrollBar()
@@ -532,15 +532,15 @@ function CEPGP_UpdateTrafficScrollBar()
 		else
 			tStamp = "";
 		end
-		if search ~= "" and (string.find(name, search) or
-			string.find(issuer, search) or
-			string.find(action, search) or
-			string.find(EPB, search) or
-			string.find(EPA, search) or
-			string.find(GPB, search) or
-			string.find(GPA, search) or
-			string.find(item, search) or
-			string.find(tStamp, search)) then
+		if search ~= "" and (string.find(string.lower(name), string.lower(search)) or
+			string.find(string.lower(issuer), string.lower(search)) or
+			string.find(string.lower(action), string.lower(search)) or
+			string.find(string.lower(EPB), string.lower(search)) or
+			string.find(string.lower(EPA), string.lower(search)) or
+			string.find(string.lower(GPB), string.lower(search)) or
+			string.find(string.lower(GPA), string.lower(search)) or
+			string.find(string.lower(item), string.lower(search)) or
+			string.find(string.lower(tStamp), string.lower(search))) then
 			results[matches] = {
 				[1] = name,
 				[2] = issuer,
@@ -660,7 +660,10 @@ function CEPGP_UpdateStandbyScrollBar()
 			end
 		end
 		local _, _, rank, rankIndex, oNote, _, classFile = CEPGP_getGuildInfo(CEPGP_standbyRoster[i][1]);
-		local _, _, _, _, _, _, _, _, online = GetGuildRosterInfo(CEPGP_getIndex(CEPGP_standbyRoster[i][1]));
+		local online = true;
+		if CEPGP_standbyRoster[i][1] then
+			_, _, _, _, _, _, _, _, online = GetGuildRosterInfo(CEPGP_getIndex(CEPGP_standbyRoster[i][1]));
+		end
 		tempTable[i] = {
 			[1] = CEPGP_standbyRoster[i][1], --name
 			[2] = CEPGP_standbyRoster[i][2], --class
