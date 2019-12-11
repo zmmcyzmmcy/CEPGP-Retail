@@ -474,12 +474,10 @@ end
 		
 function CEPGP_defChannelDropdown(frame, level, menuList)
 	local channels = {
-		[1] = L["Say"],
-		[2] = L["Yell"],
-		[3] = L["Party"],
-		[4] = L["Raid"],
-		[5] = L["Guild"],
-		[6] = L["Officer"],
+		[1] = L["Party"],
+		[2] = L["Raid"],
+		[3] = L["Guild"],
+		[4] = L["Officer"],
 	};
 	for index, value in ipairs(channels) do
 		local info = {
@@ -508,12 +506,10 @@ end
 		
 function CEPGP_lootChannelDropdown(frame, level, menuList)
 	local channels = {
-		[1] = L["Say"],
-		[2] = L["Yell"],
-		[3] = L["Party"],
-		[4] = L["Raid"],
-		[5] = L["Guild"],
-		[6] = L["Officer"],
+		[1] = L["Party"],
+		[2] = L["Raid"],
+		[3] = L["Guild"],
+		[4] = L["Officer"],
 	};
 	for index, value in ipairs(channels) do
 		local info = {

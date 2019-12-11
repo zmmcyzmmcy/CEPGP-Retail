@@ -46,12 +46,10 @@ function CEPGP_initialise()
 	AUTOEP["Teremus the Devourer"] = nil;
 	
 	local channels = {
-		[1] = L["Say"],
-		[2] = L["Yell"],
-		[3] = L["Party"],
-		[4] = L["Raid"],
-		[5] = L["Guild"],
-		[6] = L["Officer"],
+		[1] = L["Party"],
+		[2] = L["Raid"],
+		[3] = L["Guild"],
+		[4] = L["Officer"],
 	};
 	
 	if not CEPGP_tContains(channels, CHANNEL) then
@@ -1780,12 +1778,10 @@ end
 
 function CEPGP_getReportChannel(channel)
 	local channels = {
-		[1] = L["Say"],
-		[2] = L["Yell"],
-		[3] = L["Party"],
-		[4] = L["Raid"],
-		[5] = L["Guild"],
-		[6] = L["Officer"],
+		[1] = L["Party"],
+		[2] = L["Raid"],
+		[3] = L["Guild"],
+		[4] = L["Officer"],
 	};
 	for k, v in ipairs(channels) do
 		if string.upper(channel) == v then
