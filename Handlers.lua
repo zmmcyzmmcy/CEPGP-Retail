@@ -41,9 +41,9 @@ function CEPGP_handleComms(event, arg1, arg2, response)
 							if response then
 								if response < 5 then	-- 5 means they're not using the addon or they're using an outdated version that doesn't support responses
 									CEPGP_sendChatMessage(arg2 .. " (" .. class .. ") needs (" .. CEPGP_response_buttons[response][2] .. "). (" .. math.floor((EP/GP)*100)/100 .. " PR)", CEPGP_lootChannel);
+								elseif response == 5 or not response then
+									CEPGP_sendChatMessage(arg2 .. " (" .. class .. ") needs (" .. math.floor((EP/GP)*100)/100 .. " PR)", CEPGP_lootChannel);
 								end
-							elseif response == 5 or not response then
-								CEPGP_sendChatMessage(arg2 .. " (" .. class .. ") needs (" .. math.floor((EP/GP)*100)/100 .. " PR)", CEPGP_lootChannel);
 							end
 						elseif not CEPGP_suppress_announcements then
 							local total = GetNumGroupMembers();
@@ -55,9 +55,9 @@ function CEPGP_handleComms(event, arg1, arg2, response)
 							if response then
 								if response < 5 then
 									CEPGP_sendChatMessage(arg2 .. " (" .. class .. ") needs (" .. CEPGP_response_buttons[response][2] .. "). (Non-guild member)", CEPGP_lootChannel);
+								elseif response == 5 or not response then
+									CEPGP_sendChatMessage(arg2 .. " (" .. class .. ") needs (Non-guild Member)", CEPGP_lootChannel);
 								end
-							elseif response == 5 or not response then
-								CEPGP_sendChatMessage(arg2 .. " (" .. class .. ") needs (Non-guild Member)", CEPGP_lootChannel);
 							end
 						end
 						if CEPGP_isML() == 0 and ((CEPGP_show_passes and response == 6) or response < 6 or not response) then --If you are the master looter
@@ -92,9 +92,9 @@ function CEPGP_handleComms(event, arg1, arg2, response)
 						if response then
 							if response < 5 then
 								CEPGP_sendChatMessage(arg2 .. " (" .. class .. ") needs (" .. CEPGP_response_buttons[response][2] .. "). (" .. math.floor((EP/GP)*100)/100 .. " PR)", CEPGP_lootChannel);
+							elseif response == 5 or not response then
+								CEPGP_sendChatMessage(arg2 .. " (" .. class .. ") needs (" .. math.floor((EP/GP)*100)/100 .. " PR)", CEPGP_lootChannel);
 							end
-						elseif response == 5 or not response then
-							CEPGP_sendChatMessage(arg2 .. " (" .. class .. ") needs (" .. math.floor((EP/GP)*100)/100 .. " PR)", CEPGP_lootChannel);
 						end
 					elseif not CEPGP_suppress_announcements then
 						local total = GetNumGroupMembers();
@@ -106,9 +106,9 @@ function CEPGP_handleComms(event, arg1, arg2, response)
 						if response then
 							if response < 5 then
 								CEPGP_sendChatMessage(arg2 .. " (" .. class .. ") needs (" .. CEPGP_response_buttons[response][2] .. "). (Non-guild member)", CEPGP_lootChannel);
+							elseif response == 5 or not response then
+								CEPGP_sendChatMessage(arg2 .. " (" .. class .. ") needs (Non-guild Member)", CEPGP_lootChannel);
 							end
-						elseif response == 5 or not response then
-							CEPGP_sendChatMessage(arg2 .. " (" .. class .. ") needs (Non-guild Member)", CEPGP_lootChannel);
 						end
 					end
 					if CEPGP_isML() == 0 and ((CEPGP_show_passes and response == 6) or response < 6 or not response) then --If you are the master looter
