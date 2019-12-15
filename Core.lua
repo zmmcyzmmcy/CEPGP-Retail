@@ -1,5 +1,5 @@
 --[[ Globals ]]--
-CEPGP_VERSION = "1.12.8.beta-6";
+CEPGP_VERSION = "1.12.8.beta-7";
 SLASH_CEPGP1 = "/CEPGP";
 SLASH_CEPGP2 = "/cep";
 CEPGP_VERSION_NOTIFIED = false;
@@ -505,8 +505,9 @@ function CEPGP_addStandbyEP(amount, boss, msg)
 				end
 			end
 			if not inRaid then
-				local _, rank, _, _, offNote, _, _, _, online = GetGuildRosterInfo(CEPGP_roster[name][1]);
-				local EP,GP = CEPGP_getEPGP(CEPGP_roster[name][5]);
+				local index = CEPGP_getIndex(name, CEPGP_roster[name][1]);
+				local _, rank, _, _, _, _, _, offNote, online = GetGuildRosterInfo(index);
+				local EP,GP = CEPGP_getEPGP(offNote);
 				EP = math.floor(tonumber(EP) + amount);
 				GP = math.floor(tonumber(GP));
 				if GP < BASEGP then
@@ -555,9 +556,10 @@ function CEPGP_addStandbyEP(amount, boss, msg)
 				end
 			end
 			if not inRaid then
-				local _, rank, _, _, offNote, _, _, _, online = GetGuildRosterInfo(CEPGP_roster[name][1]);
+				local index = CEPGP_getIndex(name, CEPGP_roster[name][1]);
+				local _, rank, _, _, _, _, _, offNote, online = GetGuildRosterInfo(index);
 				if online or STANDBYOFFLINE then
-					local EP,GP = CEPGP_getEPGP(CEPGP_roster[name][5]);
+					local EP,GP = CEPGP_getEPGP(offNote);
 					EP = tonumber(EP) + amount;
 					GP = tonumber(GP);
 					if GP < BASEGP then
@@ -693,32 +695,18 @@ function CEPGP_addGP(player, amount, itemID, itemLink, msg, response)
 			if not itemLink then
 				_, itemLink = GetItemInfo(tonumber(itemID));
 			end
-			if msg ~= "" and msg ~= nil then
-				if response then
-					TRAFFIC[CEPGP_ntgetn(TRAFFIC)+1] = {
-						[1] = player,
-						[2] = UnitName("player"),
-						[3] = "Add GP " .. amount .. " (" .. response .. ")",
-						[4] = EP,
-						[5] = EP,
-						[6] = GPB,
-						[7] = GP,
-						[8] = itemLink,
-						[9] = time()
+			if response then
+				TRAFFIC[CEPGP_ntgetn(TRAFFIC)+1] = {
+					[1] = player,
+					[2] = UnitName("player"),
+					[3] = "Add GP " .. amount .. " (" .. response .. ")",
+					[4] = EP,
+					[5] = EP,
+					[6] = GPB,
+					[7] = GP,
+					[8] = itemLink,
+					[9] = time()
 					};
-				else
-					TRAFFIC[CEPGP_ntgetn(TRAFFIC)+1] = {
-						[1] = player,
-						[2] = UnitName("player"),
-						[3] = "Add GP " .. amount .. " (" .. msg .. ")",
-						[4] = EP,
-						[5] = EP,
-						[6] = GPB,
-						[7] = GP,
-						[8] = itemLink,
-						[9] = time()
-					};
-				end
 			else
 				TRAFFIC[CEPGP_ntgetn(TRAFFIC)+1] = {
 					[1] = player,
@@ -732,9 +720,7 @@ function CEPGP_addGP(player, amount, itemID, itemLink, msg, response)
 					[9] = time()
 				};
 			end
-			if msg ~= "" and msg ~= nil then
-				CEPGP_ShareTraffic(player, UnitName("player"), "Add GP " .. amount .. " (" .. msg .. ")", EP, EP, GPB, GP, itemID);
-			elseif response then
+			if response then
 				CEPGP_ShareTraffic(player, UnitName("player"), "Add GP " .. amount .. " (" .. response .. ")", EP, EP, GPB, GP, itemID);
 			else
 				CEPGP_ShareTraffic(player, UnitName("player"), "Add GP " .. amount, EP, EP, GPB, GP, itemID);

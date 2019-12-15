@@ -53,10 +53,10 @@ function CEPGP_initialise()
 	};
 	
 	if not CEPGP_tContains(channels, CHANNEL) then
-		CHANNEL = channels[5];
+		CHANNEL = channels[3];
 	end
 	if not CEPGP_tContains(channels, CEPGP_lootChannel) then
-		CEPGP_lootChannel = channels[4];
+		CEPGP_lootChannel = channels[2];
 	end
 	
 	-- Localize boss names on the config UI
@@ -152,8 +152,9 @@ function CEPGP_initialise()
 	
 	C_ChatInfo.RegisterAddonMessagePrefix("CEPGP"); --Registers CEPGP for use in the addon comms environment
 	CEPGP_SendAddonMsg("version-check", "GUILD");
-	DEFAULT_CHAT_FRAME:AddMessage("|c00FFC100Classic EPGP Version: " .. CEPGP_VERSION .. " Loaded|r");
-	DEFAULT_CHAT_FRAME:AddMessage("|c00FFC100CEPGP: Currently reporting to channel - " .. CHANNEL .. "|r");
+	C_Timer.After(8, function()
+		DEFAULT_CHAT_FRAME:AddMessage("|c00FFC100Classic EPGP Version: " .. CEPGP_VERSION .. " Loaded|r");
+	end);
 	
 	if not CEPGP_notice then
 		CEPGP_notice_frame:Show();
@@ -184,13 +185,21 @@ function CEPGP_calcGP(link, quantity, id)
 			for k, v in pairs(OVERRIDE_INDEX) do
 				local overrideID = CEPGP_getItemID(CEPGP_getItemString(k));
 				local temp = CEPGP_getItemID(CEPGP_getItemString(link));
+				
+				--	Checks to see if the item ID is the same
 				if overrideID == temp then
 					return v;
 				end
+				
+				--	No? Then maybe the item name is the same. For example, Head of Onyxia has a different item ID for alliance as it does for horde but the same name
 				local temp = string.lower(string.gsub(name, " ", ""));
-				k = string.lower(string.gsub(k, " ", ""));
-				if temp == k then
-					return v;
+				if GetItemInfo(overrideID) then -- k is in the cache
+					k = string.lower(string.gsub(GetItemInfo(overrideID), " ", ""));
+				else
+					k = string.lower(string.gsub(k, " ", ""));
+					if temp == k then
+						return v;
+					end
 				end
 			end
 			
@@ -208,7 +217,7 @@ function CEPGP_calcGP(link, quantity, id)
 		end
 			
 			if slot == "INVTYPE_ROBE" then slot = "INVTYPE_CHEST"; end
-			if slot == "INVTYPE_WEAPON" then slot = "INVTYPE_WEAPONOFFHAND"; end
+			if slot == "INVTYPE_RANGED" then slot = "INVTYPE_RANGEDRIGHT"; end
 			if CEPGP_debugMode then
 				local quality = rarity == 0 and "Poor" or rarity == 1 and "Common" or rarity == 2 and "Uncommon" or rarity == 3 and "Rare" or rarity == 4 and "Epic" or "Legendary";
 				CEPGP_print("Name: " .. name);
@@ -238,7 +247,11 @@ function CEPGP_calcGP(link, quantity, id)
 				return v;
 			end
 			local temp = string.lower(string.gsub(name, " ", ""));
-			k = string.lower(string.gsub(k, " ", ""));
+			if GetItemInfo(overrideID) then
+				k = string.lower(string.gsub(GetItemInfo(overrideID), " ", ""));
+			else
+				k = string.lower(string.gsub(k, " ", ""));
+			end
 			if string.lower(temp) == string.lower(k) then
 				return v;
 			end
@@ -257,6 +270,7 @@ function CEPGP_calcGP(link, quantity, id)
 		end
 		
 		if slot == "INVTYPE_ROBE" then slot = "INVTYPE_CHEST"; end
+		if slot == "INVTYPE_RANGED" then slot = "INVTYPE_RANGEDRIGHT"; end
 		if CEPGP_debugMode then
 			local quality = rarity == 0 and "Poor" or rarity == 1 and "Common" or rarity == 2 and "Uncommon" or rarity == 3 and "Rare" or rarity == 4 and "Epic" or "Legendary";
 			CEPGP_print("Name: " .. name);
@@ -557,7 +571,9 @@ function CEPGP_rosterUpdate(event)
 		if not UnitInRaid("player") then
 			CEPGP_standbyRoster = {};
 		end
-		CEPGP_UpdateStandbyScrollBar();
+		if numGuild > 0 then
+			CEPGP_UpdateStandbyScrollBar();
+		end
 		
 	elseif event == "GROUP_ROSTER_UPDATE" then
 		if IsInRaid("player") and CEPGP_isML() == 0 then
@@ -1051,7 +1067,8 @@ function CEPGP_sortDistList(list)
 	};
 	for i = 1, #list do
 		local index = tonumber(list[i][11]);
-		if not temp[index] then temp[index] = {}; end
+		if not index then index = 5; end
+		--if not temp[index] then temp[index] = {}; end
 		temp[index][#temp[index]+1] = {	-- Response Index
 			[1] = list[i][1],
 			[2] = list[i][2],

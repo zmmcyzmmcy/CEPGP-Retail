@@ -47,7 +47,9 @@ function CEPGP_ListButton_OnClick(obj)
 		ShowUIPanel(CEPGP_context_popup);
 		ShowUIPanel(CEPGP_context_amount);
 		ShowUIPanel(CEPGP_context_popup_EP_check);
+		HideUIPanel(CEPGP_context_popup_GP_check);
 		_G["CEPGP_context_popup_EP_check_text"]:Show();
+		_G["CEPGP_context_popup_GP_check_text"]:Hide();
 		CEPGP_context_popup_EP_check:SetChecked(1);
 		CEPGP_context_popup_GP_check:SetChecked(nil);
 		CEPGP_context_popup_header:SetText("Standby EPGP Moderation");
@@ -159,15 +161,19 @@ function CEPGP_ListButton_OnClick(obj)
 			CEPGP_distribute_popup:SetAttribute("responseName", nil);
 			CEPGP_distribute_popup:SetAttribute("response", nil);
 		end
-		local gp = CEPGP_distribute_GP_value:GetText();
+		local gp = math.floor(CEPGP_distribute_GP_value:GetText());
 		local discGP = math.floor(gp*((100-discount)/100));
 		local player = _G[_G[obj]:GetName() .. "Info"]:GetText();
 		ShowUIPanel(CEPGP_distribute_popup);
 		if _G[obj]:GetAttribute("response") then
 			CEPGP_distribute_popup_title:SetText(player .. " (" .. response .. ")");
-			CEPGP_distribute_popup_gp:Show();
-			CEPGP_distribute_popup_gp:SetText("Give for " .. discGP .. "\n(" .. response .. ")");
 			CEPGP_distribute_popup_gp_full:SetText("Give for " .. gp .. "\n(Full Price)");
+			if discount > 0 then
+				CEPGP_distribute_popup_gp:SetText("Give for " .. discGP .. "\n(" .. response .. ")");
+				CEPGP_distribute_popup_gp:Show();
+			else
+				CEPGP_distribute_popup_gp:Hide();
+			end
 		else
 			CEPGP_distribute_popup_title:SetText(player);
 			CEPGP_distribute_popup_gp_full:SetText("Give for " .. gp .. "\n(Full Price)");

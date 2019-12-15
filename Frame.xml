@@ -1293,15 +1293,6 @@
 														GuildRosterSetOfficerNote(i, EP .. "," .. BASEGP);
 													end
 												end
-												--[[if name then
-													CEPGP_roster[name] = {
-													[1] = i,
-													[2] = class,
-													[3] = rank,
-													[4] = rankIndex,
-													[5] = officerNote
-													};
-												end]]
 											end
 										end
 									</OnEditFocusLost>
@@ -8136,74 +8127,6 @@
 					_G["CEPGP_loot_gui_options_preview_" .. i]:SetText(CEPGP_response_buttons[i][2]);
 				end
 			</OnShow>
-		</Scripts>
-	</Frame>
-	
-	<Frame name="CEPGP_whatsnew" parent="UIParent" hidden="true" enableMouse="true" toplevel="true" movable="true" clampedToScreen="true">
-		<Size>
-			<AbsDimension x="600" y="300" />
-		</Size>
-		<Anchors>
-			<Anchor point="CENTER" />
-		</Anchors>
-		<Backdrop bgFile="Interface\Tooltips\UI-Tooltip-Background" edgeFile="Interface\DialogFrame\UI-DialogBox-Border" tile="true">
-			<Color r="0" g="0" b="0" />
-			<BackgroundInsets>
-				<AbsInset left="11" right="12" top="12" bottom="11" />
-			</BackgroundInsets>
-			<TileSize>
-				<AbsValue val="32" />
-			</TileSize>
-			<EdgeSize>
-				<AbsValue val="32" />
-			</EdgeSize>
-		</Backdrop>
-		<Layers>
-			<Layer level="ARTWORK">
-				<Texture file="Interface\DialogFrame\UI-DialogBox-Header">
-					<Size>
-						<AbsDimension x="300" y="64"/>
-					</Size>
-					<Anchors>
-						<Anchor point="TOP">
-							<Offset>
-								<AbsDimension x="0" y="12"/>
-							</Offset>
-						</Anchor>
-					</Anchors>
-				</Texture>
-			</Layer>
-		</Layers>
-		<Frames>
-			<Button name="CEPGP_whatsnew_close" inherits="UIPanelCloseButton">
-				<Size>
-					<AbsDimension x="40" y="40" />
-				</Size>
-				<Anchors>
-					<Anchor point="TOPRIGHT">
-						<Offset>
-							<AbsDimension x="-3" y="-3" />
-						</Offset>
-					</Anchor>
-				</Anchors>
-				<Scripts>
-					<OnClick>
-						PlaySound(799);
-						whatsnew:Hide();
-					</OnClick>
-				</Scripts>
-			</Button>
-		</Frames>
-		<Scripts>
-			<OnLoad>
-				self:RegisterForDrag("LeftButton");
-			</OnLoad>
-			<OnDragStart>
-				self:StartMoving();
-			</OnDragStart>
-			<OnDragStop>
-				self:StopMovingOrSizing();
-			</OnDragStop>
 		</Scripts>
 	</Frame>
 

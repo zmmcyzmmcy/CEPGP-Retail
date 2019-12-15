@@ -177,8 +177,6 @@ function CEPGP_IncAddonMsg(message, sender, sync)
 		if args[1] == "?forceSync" then
 			target = "?forceSync";
 			CEPGP_print("Synchronising CEPGP settings with Guild members.");
-		else
-			return;
 		end
 		CEPGP_SendAddonMsg(target..";impresponse;SYNCHRONISING;"..UnitName("player"), lane);
 		
@@ -418,7 +416,9 @@ function CEPGP_IncAddonMsg(message, sender, sync)
 		local name = args[2];
 		local guid = args[3];
 		if not guid then return; end
-		if CEPGP_tContains(CEPGP_kills, guid) then return; end
+		if CEPGP_tContains(CEPGP_kills, guid) then
+			return;
+		end
 		if L[name] == "Zealot Zath" or L[name] == "Zealot Lor'Khan" then
 			CEPGP_handleCombat(name, false, guid);
 		end

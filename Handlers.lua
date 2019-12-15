@@ -478,14 +478,17 @@ function CEPGP_handleLoot(event, arg1, arg2)
 				end
 				if CEPGP_distGP then
 					if response then
-						SendChatMessage("Awarded " .. _G["CEPGP_distribute_item_name"]:GetText() .. " to ".. CEPGP_distPlayer .. " for " .. CEPGP_distribute_GP_value:GetText()*CEPGP_rate .. " GP (" .. response .. ")", CHANNEL, CEPGP_LANGUAGE);
+						local message = "Awarded " .. _G["CEPGP_distribute_item_name"]:GetText() .. " to ".. CEPGP_distPlayer .. " for " .. CEPGP_distribute_GP_value:GetText()*CEPGP_rate .. " GP (" .. response .. ")";
+						SendChatMessage(message, CHANNEL, CEPGP_LANGUAGE);
 					else
-						SendChatMessage("Awarded " .. _G["CEPGP_distribute_item_name"]:GetText() .. " to ".. CEPGP_distPlayer .. " for " .. CEPGP_distribute_GP_value:GetText()*CEPGP_rate .. " GP", CHANNEL, CEPGP_LANGUAGE);
+						local message = "Awarded " .. _G["CEPGP_distribute_item_name"]:GetText() .. " to ".. CEPGP_distPlayer .. " for " .. CEPGP_distribute_GP_value:GetText()*CEPGP_rate .. " GP";
+						SendChatMessage(message, CHANNEL, CEPGP_LANGUAGE);
 					end
-					CEPGP_addGP(CEPGP_distPlayer, CEPGP_distribute_GP_value:GetText()*CEPGP_rate, CEPGP_DistID, CEPGP_distItemLink, _, response);
+					CEPGP_addGP(CEPGP_distPlayer, CEPGP_distribute_GP_value:GetText()*CEPGP_rate, CEPGP_DistID, CEPGP_distItemLink, nil, response);
 				else
 					SendChatMessage("Awarded " .. _G["CEPGP_distribute_item_name"]:GetText() .. " to ".. CEPGP_distPlayer .. " for free", CHANNEL, CEPGP_LANGUAGE);
-					local offNote = CEPGP_roster[CEPGP_distPlayer][5];
+					local index = CEPGP_roster[CEPGP_distPlayer][1];
+					local _, _, _, _, _, _, _, offNote = GetGuildRosterInfo(index);
 					local EP, GP = CEPGP_getEPGP(offNote);
 					TRAFFIC[CEPGP_ntgetn(TRAFFIC)+1] = {
 						[1] = CEPGP_distPlayer,
