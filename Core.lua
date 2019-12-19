@@ -1,5 +1,5 @@
 --[[ Globals ]]--
-CEPGP_VERSION = "1.12.8.beta-7";
+CEPGP_VERSION = "1.12.8.release";
 SLASH_CEPGP1 = "/CEPGP";
 SLASH_CEPGP2 = "/cep";
 CEPGP_VERSION_NOTIFIED = false;
@@ -157,19 +157,16 @@ function CEPGP_OnEvent(event, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, ar
 		end
 	end
 	
-	if event == "COMBAT_LOG_EVENT_UNFILTERED" then
+	if event == "COMBAT_LOG_EVENT_UNFILTERED" and
+		((GetLootMethod() == "master" and CEPGP_isML() ~= 0) or (GetLootMethod() == "group" and not UnitIsGroupLeader("player"))) then
 		local _, action, _, _, _, _, _, guid, name = CombatLogGetCurrentEventInfo();
 		if action == "UNIT_DIED" and string.find(guid, "Creature") then
 			CEPGP_SendAddonMsg("?KillUpdate;" .. name .. ";" .. guid, "RAID");
-			if L[name] == "Zealot Zath" or L[name] == "Zealot Lor'Khan" then
+			if L[name] == "Zealot Zath" or L[name] == "Zealot Lor'Khan" or
+				L[name] == "Flamewaker Elite" or L[name] == "Flamewaker Healer" then
 				CEPGP_SendAddonMsg("?KillUpdate;" .. name .. ";" .. guid, "RAID");
 				return;
-			end
-			if L[name] == "Flamewaker Elite" or L[name] == "Flamewaker Healer" then
-				CEPGP_SendAddonMsg("?KillUpdate;" .. name .. ";" .. guid, "RAID");
-				return;
-			end
-			if bossNameIndex[L[name]] then
+			elseif bossNameIndex[L[name]] then
 				CEPGP_SendAddonMsg("?KillUpdate;" .. name .. ";" .. guid, "RAID");
 				return;
 			end

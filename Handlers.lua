@@ -62,7 +62,6 @@ function CEPGP_handleComms(event, arg1, arg2, response)
 						end
 						if CEPGP_isML() == 0 and ((CEPGP_show_passes and response == 6) or response < 6 or not response) then --If you are the master looter
 							if not response then response = 5; end
-							print(response);
 							CEPGP_SendAddonMsg("!need;"..arg2..";"..CEPGP_DistID..";"..response, "RAID"); --!need;playername;itemID (of the item being distributed) is sent for sharing with raid assist
 							CEPGP_itemsTable[arg2] = {};
 							CEPGP_itemsTable[arg2][3] = response;
@@ -293,13 +292,7 @@ function CEPGP_handleCombat(name, except, guid)
 	end
 	if CEPGP_tContains(CEPGP_kills, guid) then return; end
 	local EP;
-	local isLead;
-	for i = 1, GetNumGroupMembers() do
-		if UnitName("player") == GetRaidRosterInfo(i) then
-			_, isLead = GetRaidRosterInfo(i);
-		end
-	end
-	if (((GetLootMethod() == "master" and CEPGP_isML() == 0) or (GetLootMethod() == "group" and isLead == 2)) and CEPGP_ntgetn(CEPGP_roster) > 0) or CEPGP_debugMode then
+	if (((GetLootMethod() == "master" and CEPGP_isML() == 0) or (GetLootMethod() == "group" and UnitIsGroupLeader("player"))) and CEPGP_ntgetn(CEPGP_roster) > 0) or CEPGP_debugMode then
 		local success = CEPGP_getCombatModule(name, guid);
 		if not L[CEPGP_combatModule] then
 			for k, v in pairs(L) do

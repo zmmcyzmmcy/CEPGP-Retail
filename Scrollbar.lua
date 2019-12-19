@@ -406,12 +406,35 @@ end
 
 function CEPGP_UpdateVersionScrollBar()
 	local name, classFile, class, colour, version;
+	local showOffline = CEPGP_version:GetAttribute("offline");
+	local tempTable = {};
 	local kids = {_G["CEPGP_version_scrollframe_container"]:GetChildren()};
 	for _, child in ipairs(kids) do
 		child:Hide();
 	end
+	if showOffline == "false" then
+		for i = 1, #CEPGP_groupVersion do
+			if CEPGP_groupVersion[i][2] ~= "Offline" then
+				tempTable[#tempTable+1] = {
+					[1] = CEPGP_groupVersion[i][1],
+					[2] = CEPGP_groupVersion[i][2],
+					[3] = CEPGP_groupVersion[i][3],
+					[4] = CEPGP_groupVersion[i][4]
+				};
+			end
+		end
+	else
+		for i = 1, #CEPGP_groupVersion do
+			tempTable[i] = {
+				[1] = CEPGP_groupVersion[i][1],
+				[2] = CEPGP_groupVersion[i][2],
+				[3] = CEPGP_groupVersion[i][3],
+				[4] = CEPGP_groupVersion[i][4]
+			};
+		end
+	end
 	if CEPGP_vSearch == "GUILD" then
-		for i = 1, CEPGP_ntgetn(CEPGP_groupVersion) do
+		for i = 1, #tempTable do
 			if not _G["versionButton" .. i] then
 				local frame = CreateFrame('Button', "versionButton" .. i, _G["CEPGP_version_scrollframe_container"], "versionButtonTemplate"); -- Creates version frames if needed
 				if i > 1 then
@@ -421,8 +444,8 @@ function CEPGP_UpdateVersionScrollBar()
 				end
 			end
 			_G["versionButton" .. i]:Show();
-			local name = CEPGP_groupVersion[i][1];
-			local classFile = CEPGP_groupVersion[i][4];
+			local name = tempTable[i][1];
+			local classFile = tempTable[i][4];
 			local colour = RAID_CLASS_COLORS[classFile];
 			if not colour then
 				colour = {
@@ -431,20 +454,20 @@ function CEPGP_UpdateVersionScrollBar()
 				b = 1
 			};
 			end
-			_G["versionButton" .. i .. "name"]:SetText(CEPGP_groupVersion[i][1]);
+			_G["versionButton" .. i .. "name"]:SetText(tempTable[i][1]);
 			_G["versionButton" .. i .. "name"]:SetTextColor(colour.r, colour.g, colour.b);
-			_G["versionButton" .. i .. "version"]:SetText(CEPGP_groupVersion[i][2]);
+			_G["versionButton" .. i .. "version"]:SetText(tempTable[i][2]);
 			_G["versionButton" .. i .. "version"]:SetTextColor(colour.r, colour.g, colour.b);
 		end
 	else
-		for i = 1, CEPGP_ntgetn(CEPGP_groupVersion) do
+		for i = 1, CEPGP_ntgetn(tempTable) do
 			_G["versionButton" .. i]:Show();
 			for x = 1, GetNumGroupMembers() do
-				if CEPGP_groupVersion[x][1] == GetRaidRosterInfo(i) then
-					name = CEPGP_groupVersion[x][1];
-					version = CEPGP_groupVersion[x][2];
-					class = CEPGP_groupVersion[x][3];
-					classFile = CEPGP_groupVersion[x][4];
+				if tempTable[x][1] == GetRaidRosterInfo(i) then
+					name = tempTable[x][1];
+					version = tempTable[x][2];
+					class = tempTable[x][3];
+					classFile = tempTable[x][4];
 				--	print(name);
 				--	print(class);
 					local colour = RAID_CLASS_COLORS[classFile];
