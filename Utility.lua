@@ -183,7 +183,11 @@ function CEPGP_calcGP(link, quantity, id)
 		item:ContinueOnItemLoad(function()
 			name, link, rarity, ilvl, itemType, subType, _, _, slot, _, _, classID, subClassID = GetItemInfo(id);
 			for k, v in pairs(OVERRIDE_INDEX) do
-				local overrideID = CEPGP_getItemID(CEPGP_getItemString(k));
+				if string.find(k, "item:") then
+					overrideID = CEPGP_getItemID(CEPGP_getItemString(k));
+				else
+					overrideID = 0;
+				end
 				local temp = CEPGP_getItemID(CEPGP_getItemString(link));
 				
 				--	Checks to see if the item ID is the same
@@ -241,7 +245,12 @@ function CEPGP_calcGP(link, quantity, id)
 	else
 		if not ilvl then ilvl = 0; end
 		for k, v in pairs(OVERRIDE_INDEX) do
-			local overrideID = CEPGP_getItemID(CEPGP_getItemString(k));
+			local overrideID;
+			if string.find(k, "item:") then
+				overrideID = CEPGP_getItemID(CEPGP_getItemString(k));
+			else
+				overrideID = 0;
+			end
 			local temp = CEPGP_getItemID(CEPGP_getItemString(link));
 			if overrideID == temp then
 				return v;
