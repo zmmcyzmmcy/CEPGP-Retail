@@ -557,8 +557,8 @@ function CEPGP_addStandbyEP(amount, boss, msg)
 				local _, rank, _, _, _, _, _, offNote, online = GetGuildRosterInfo(index);
 				if online or STANDBYOFFLINE then
 					local EP,GP = CEPGP_getEPGP(offNote);
-					EP = tonumber(EP) + amount;
-					GP = tonumber(GP);
+					EP = math.floor(tonumber(EP) + amount);
+					GP = math.floor(tonumber(GP));
 					if GP < BASEGP then
 						GP = BASEGP;
 					end
