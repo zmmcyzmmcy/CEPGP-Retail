@@ -1671,7 +1671,7 @@ function CEPGP_callItem(id, gp, buttons, timeout)
 			CEPGP_respond_timeout_string:SetText("Time Remaining: " .. timer);
 			if timer == 0 then
 				CEPGP_respond:Hide();
-				CEPGP_SendAddonMsg("LootRsp;5", "RAID");
+				CEPGP_SendAddonMsg("LootRsp;6", "RAID");
 			end
 		end
 		call = C_Timer.NewTicker(1, function()
