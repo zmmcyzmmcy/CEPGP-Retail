@@ -492,6 +492,7 @@ end
 function CEPGP_UpdateOverrideScrollBar()
 	local tempTable = {};
 	local items = {};
+	local compTable = {};
 	local kids = {_G["CEPGP_override_scrollframe_container"]:GetChildren()};
 	for _, child in ipairs(kids) do
 		child:Hide();
@@ -500,29 +501,21 @@ function CEPGP_UpdateOverrideScrollBar()
 		local name = GetItemInfo(k);
 		if name then
 			table.insert(items, name);
+			compTable[name] = k;
 		else
 			table.insert(items, k);
+			compTable[k] = k;
 		end
 	end
 	table.sort(items);
 	for i, v in ipairs(items) do
-		for link, gp in pairs(OVERRIDE_INDEX) do
-			local name = GetItemInfo(link);
-			if name == v then
-				tempTable[i] = {
-					[link] = gp
-				};
-				break;
-			elseif not name and link == v then
-				tempTable[i] = {
-					[link] = gp
-				};
-				break;				
-			end
-		end
+		tempTable[#tempTable+1] = {
+			[1] = compTable[v],
+			[2] = OVERRIDE_INDEX[compTable[v]]
+		}
 	end
 	for i = 1, #tempTable do
-		if not _G["CEPGP_overrideButton" ..  i] then
+		if not _G["overrideButton" ..  i] then
 			local frame = CreateFrame('Button', "overrideButton" .. i, _G["CEPGP_override_scrollframe_container"], "lootOverrideButtonTemplate"); -- Creates override frames if needed
 			if i > 1 then
 				_G["overrideButton" .. i]:SetPoint("TOPLEFT", _G["overrideButton" .. i-1], "BOTTOMLEFT", 0, -2);
@@ -530,13 +523,10 @@ function CEPGP_UpdateOverrideScrollBar()
 				_G["overrideButton" .. i]:SetPoint("TOPLEFT", _G["CEPGP_override_scrollframe_container"], "TOPLEFT", 5, -6);
 			end
 		end
-		for item, gp in pairs(tempTable[i]) do
-			_G["overrideButton" .. i]:Show();
-			_G["overrideButton" .. i .. "item"]:SetText(item);
-			_G["overrideButton" .. i .. "GP"]:SetText(OVERRIDE_INDEX[item]);
-			_G["overrideButton" .. i .. "GP"]:SetTextColor(1, 1, 1);
-			break;
-		end
+		_G["overrideButton" .. i]:Show();
+		_G["overrideButton" .. i .. "item"]:SetText(tempTable[i][1]);
+		_G["overrideButton" .. i .. "GP"]:SetText(tempTable[i][2]);
+		_G["overrideButton" .. i .. "GP"]:SetTextColor(1, 1, 1);
 	end
 end
 

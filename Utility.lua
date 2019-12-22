@@ -45,6 +45,21 @@ function CEPGP_initialise()
 	EPVALS["Teremus the Devourer"] = nil; -- Obsolete entry and needs to be removed
 	AUTOEP["Teremus the Devourer"] = nil;
 	
+	--	Reorganising the override index to the new format
+	for k, v in pairs(OVERRIDE_INDEX) do
+		if string.find(k, "item:") then
+			local args = CEPGP_split(k, ":");
+			if tonumber(args[10]) then
+				local id = CEPGP_getItemID(CEPGP_getItemString(k));
+				local link = CEPGP_getItemLink(id);
+				if link then
+					OVERRIDE_INDEX[link] = v;
+					OVERRIDE_INDEX[k] = nil;
+				end
+			end
+		end
+	end
+	
 	local channels = {
 		[1] = L["Party"],
 		[2] = L["Raid"],
@@ -182,43 +197,21 @@ function CEPGP_calcGP(link, quantity, id)
 		local item = Item:CreateFromItemID(tonumber(id));
 		item:ContinueOnItemLoad(function()
 			name, link, rarity, ilvl, itemType, subType, _, _, slot, _, _, classID, subClassID = GetItemInfo(id);
-			for k, v in pairs(OVERRIDE_INDEX) do
-				if string.find(k, "item:") then
-					overrideID = CEPGP_getItemID(CEPGP_getItemString(k));
-				else
-					overrideID = 0;
-				end
-				local temp = CEPGP_getItemID(CEPGP_getItemString(link));
-				
-				--	Checks to see if the item ID is the same
-				if overrideID == temp then
-					return v;
-				end
-				
-				--	No? Then maybe the item name is the same. For example, Head of Onyxia has a different item ID for alliance as it does for horde but the same name
-				local temp = string.lower(string.gsub(name, " ", ""));
-				if GetItemInfo(overrideID) then -- k is in the cache
-					k = string.lower(string.gsub(GetItemInfo(overrideID), " ", ""));
-				else
-					k = string.lower(string.gsub(k, " ", ""));
-					if temp == k then
-						return v;
+			if OVERRIDE_INDEX[name] then return OVERRIDE_INDEX[name]; end
+			if OVERRIDE_INDEX[CEPGP_getItemLink(id)] then return OVERRIDE_INDEX[CEPGP_getItemLink(id)]; end
+			
+			for _, k in pairs(CEPGP_tokens) do
+				for slotName, v in pairs(k) do
+					if k[slotName][tonumber(id)] then
+						slot = "INVTYPE_" .. string.upper(slotName);
+						ilvl = k[slotName][tonumber(id)];
+						break;
 					end
 				end
 			end
-			
-			for _, k in pairs(CEPGP_tokens) do
-			for slotName, v in pairs(k) do
-				if k[slotName][tonumber(id)] then
-					slot = "INVTYPE_" .. string.upper(slotName);
-					ilvl = k[slotName][tonumber(id)];
-					break;
-				end
+			if slot == "" or slot == nil then
+				slot = "INVTYPE_EXCEPTION";
 			end
-		end
-		if slot == "" or slot == nil then
-			slot = "INVTYPE_EXCEPTION";
-		end
 			
 			if slot == "INVTYPE_ROBE" then slot = "INVTYPE_CHEST"; end
 			if slot == "INVTYPE_RANGED" then slot = "INVTYPE_RANGEDRIGHT"; end
@@ -244,27 +237,19 @@ function CEPGP_calcGP(link, quantity, id)
 		end);
 	else
 		if not ilvl then ilvl = 0; end
-		for k, v in pairs(OVERRIDE_INDEX) do
-			local overrideID;
-			if string.find(k, "item:") then
-				overrideID = CEPGP_getItemID(CEPGP_getItemString(k));
-			else
-				overrideID = 0;
-			end
-			local temp = CEPGP_getItemID(CEPGP_getItemString(link));
-			if overrideID == temp then
+		
+		if OVERRIDE_INDEX[name] then return OVERRIDE_INDEX[name]; end
+		if OVERRIDE_INDEX[CEPGP_getItemLink(id)] then return OVERRIDE_INDEX[CEPGP_getItemLink(id)]; end
+		--local compare = "item[%-?" .. id .. ":]+";
+		--return OVERRIDE_INDEX[compare];
+		
+		--for k, v in pairs(OVERRIDE_INDEX) do
+		
+			--[[local compName = GetItemInfo(k);
+			if compName == name then
 				return v;
-			end
-			local temp = string.lower(string.gsub(name, " ", ""));
-			if GetItemInfo(overrideID) then
-				k = string.lower(string.gsub(GetItemInfo(overrideID), " ", ""));
-			else
-				k = string.lower(string.gsub(k, " ", ""));
-			end
-			if string.lower(temp) == string.lower(k) then
-				return v;
-			end
-		end
+			end]]
+		--end
 		for _, k in pairs(CEPGP_tokens) do
 			for slotName, v in pairs(k) do
 				if k[slotName][tonumber(id)] then
@@ -871,6 +856,7 @@ function CEPGP_getItemString(link)
 		return nil;
 	end
 	local itemString = string.find(link, "item[%-?%d:]+");
+	if not itemString then return nil; end
 	itemString = strsub(link, itemString, string.len(link)-(string.len(link)-2)-6);
 	return itemString;
 end
@@ -885,18 +871,38 @@ end
 
 function CEPGP_getItemLink(id)
 	local name, _, rarity = GetItemInfo(id);
-	if rarity == 0 then -- Poor
-		return "\124cff9d9d9d\124Hitem:" .. id .. "::::::::110:::::\124h[" .. name .. "]\124h\124r";
-	elseif rarity == 1 then -- Common
-		return "\124cffffffff\124Hitem:" .. id .. "::::::::110:::::\124h[" .. name .. "]\124h\124r";
-	elseif rarity == 2 then -- Uncommon
-		return "\124cff1eff00\124Hitem:" .. id .. "::::::::110:::::\124h[" .. name .. "]\124h\124r";
-	elseif rarity == 3 then -- Rare
-		return "\124cff0070dd\124Hitem:" .. id .. "::::::::110:::::\124h[" .. name .. "]\124h\124r";
-	elseif rarity == 4 then -- Epic
-		return "\124cffa335ee\124Hitem:" .. id .. "::::::::110:::::\124h[" .. name .. "]\124h\124r";
-	elseif rarity == 5 then -- Legendary
-		return "\124cffff8000\124Hitem:" .. id .. "::::::::110:::::\124h[" .. name .. "]\124h\124r";
+	if not name then
+		local item = Item:CreateFromItemID(tonumber(id));
+		item:ContinueOnItemLoad(function()
+			name, _, rarity = GetItemInfo(id);
+			if rarity == 0 then -- Poor
+				return "\124cff9d9d9d\124Hitem:" .. id .. ":::::::::::::\124h[" .. name .. "]\124h\124r";
+			elseif rarity == 1 then -- Common
+				return "\124cffffffff\124Hitem:" .. id .. ":::::::::::::\124h[" .. name .. "]\124h\124r";
+			elseif rarity == 2 then -- Uncommon
+				return "\124cff1eff00\124Hitem:" .. id .. ":::::::::::::\124h[" .. name .. "]\124h\124r";
+			elseif rarity == 3 then -- Rare
+				return "\124cff0070dd\124Hitem:" .. id .. ":::::::::::::\124h[" .. name .. "]\124h\124r";
+			elseif rarity == 4 then -- Epic
+				return "\124cffa335ee\124Hitem:" .. id .. ":::::::::::::\124h[" .. name .. "]\124h\124r";
+			elseif rarity == 5 then -- Legendary
+				return "\124cffff8000\124Hitem:" .. id .. ":::::::::::::\124h[" .. name .. "]\124h\124r";
+			end
+		end);
+	else
+		if rarity == 0 then -- Poor
+			return "\124cff9d9d9d\124Hitem:" .. id .. ":::::::::::::\124h[" .. name .. "]\124h\124r";
+		elseif rarity == 1 then -- Common
+			return "\124cffffffff\124Hitem:" .. id .. ":::::::::::::\124h[" .. name .. "]\124h\124r";
+		elseif rarity == 2 then -- Uncommon
+			return "\124cff1eff00\124Hitem:" .. id .. ":::::::::::::\124h[" .. name .. "]\124h\124r";
+		elseif rarity == 3 then -- Rare
+			return "\124cff0070dd\124Hitem:" .. id .. ":::::::::::::\124h[" .. name .. "]\124h\124r";
+		elseif rarity == 4 then -- Epic
+			return "\124cffa335ee\124Hitem:" .. id .. ":::::::::::::\124h[" .. name .. "]\124h\124r";
+		elseif rarity == 5 then -- Legendary
+			return "\124cffff8000\124Hitem:" .. id .. ":::::::::::::\124h[" .. name .. "]\124h\124r";
+		end
 	end
 end
 
@@ -950,18 +956,14 @@ end
 function CEPGP_updateOverride(id)
 	if not id then return; end
 	id = tonumber(id);
-	local name, iString = GetItemInfo(id);
-	local replaced = false;
-	for item, _ in pairs(OVERRIDE_INDEX) do
+	local link = CEPGP_getItemLink(id);
+	local name = GetItemInfo(id);
+	for item, v in pairs(OVERRIDE_INDEX) do
 		if string.lower(name) == string.lower(item) then
-			OVERRIDE_INDEX[iString] = OVERRIDE_INDEX[item];
-			table.remove(OVERRIDE_INDEX, item);
-			replaced = true;
-			break;
+			OVERRIDE_INDEX[link] = v;
+			OVERRIDE_INDEX[item] = nil;
+			return;
 		end
-	end
-	if replaced then
-		CEPGP_UpdateOverrideScrollBar();
 	end
 end
 

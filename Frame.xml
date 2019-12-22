@@ -5406,11 +5406,11 @@
 							end
 						elseif CEPGP_override_item_id:GetText() ~= "" then
 							local id = tonumber(CEPGP_override_item_id:GetText());
-							local _, link = GetItemInfo(id);
+							local link = CEPGP_getItemLink(id);
 							if not link and CEPGP_itemExists(id) then
 								local item = Item:CreateFromItemID(id);
 								item:ContinueOnItemLoad(function()
-									_, link = GetItemInfo(id);
+									link = CEPGP_getItemLink(id);
 									if (OVERRIDE_INDEX[link] and CEPGP_override_confirm) or not OVERRIDE_INDEX[link] then
 										OVERRIDE_INDEX[link] = gp;
 										CEPGP_print("GP value for " .. link .. " |c006969FFhas been overriden to " .. gp);

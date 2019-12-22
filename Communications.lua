@@ -385,7 +385,6 @@ function CEPGP_IncAddonMsg(message, sender, sync)
 			elseif option == "STANDBYPERCENT" then
 				STANDBYPERCENT = tonumber(val);		
 			elseif option == "COMPLETE" then
-				CEPGP_UpdateOverrideScrollBar();
 				CEPGP_print("Import complete");
 				CEPGP_button_options_OnClick();
 			end
