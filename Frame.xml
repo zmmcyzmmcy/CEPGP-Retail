@@ -4138,7 +4138,6 @@
 				self:RegisterEvent("CHAT_MSG_BN_WHISPER");
 				self:RegisterEvent("GET_ITEM_INFO_RECEIVED");
 				self:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED");
-				self:RegisterEvent("BOSS_KILL");
 				self:RegisterEvent("ENCOUNTER_END");
 			</OnLoad>
 			<OnMouseDown>

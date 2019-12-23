@@ -1686,7 +1686,7 @@ function CEPGP_callItem(id, gp, buttons, timeout)
 				_, link, _, _, _, _, _, _, _, tex, _, classID, subClassID = GetItemInfo(id)
 				if not CEPGP_canEquip(GetItemSubClassInfo(classID, subClassID)) and CEPGP_auto_pass then
 					CEPGP_print("Cannot equip " .. link .. "|c006969FF. Passing on item.|r");
-					CEPGP_SendAddonMsg("LootRsp;5", "RAID");
+					CEPGP_SendAddonMsg("LootRsp;6", "RAID");
 					return;
 				end
 				iString = CEPGP_getItemString(link);
@@ -1715,7 +1715,7 @@ function CEPGP_callItem(id, gp, buttons, timeout)
 	else
 		if not CEPGP_canEquip(GetItemSubClassInfo(classID, subClassID)) and CEPGP_auto_pass then
 			CEPGP_print("Cannot equip " .. link .. "|c006969FF. Passing on item.|r");
-			CEPGP_SendAddonMsg("LootRsp;5", "RAID");
+			CEPGP_SendAddonMsg("LootRsp;6", "RAID");
 			return;
 		end
 		iString = CEPGP_getItemString(link);

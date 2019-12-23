@@ -291,7 +291,7 @@ function CEPGP_UpdateGuildScrollBar()
 			[4] = v[4], --RankIndex
 			[5] = EP,
 			[6] = GP,
-			[7] = math.floor((tonumber(EP)/tonumber(GP))*100)/100,
+			[7] = math.floor((EP/GP)*100)/100,
 			[8] = v[7] -- className in English
 		};
 	end
@@ -349,7 +349,7 @@ function CEPGP_UpdateRaidScrollBar()
 				[4] = CEPGP_roster[name][4], --RankIndex
 				[5] = EP,
 				[6] = GP,
-				[7] = math.floor((tonumber(EP)/tonumber(GP))*100)/100,
+				[7] = math.floor((EP/GP)*100)/100,
 				[8] = CEPGP_roster[name][7] --Class in English
 			};
 		else
