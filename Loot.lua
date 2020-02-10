@@ -69,12 +69,13 @@ function CEPGP_announce(link, x, slotNum, quantity)
 		local iString = CEPGP_getItemString(link);
 		local name, _, _, _, _, _, _, _, slot, tex = GetItemInfo(iString);
 		local id = CEPGP_getItemID(iString);
+		CEPGP_distributing = true;
+		CEPGP_toggleGPEdit(false);
 		CEPGP_itemsTable = {};
 		CEPGP_distItemLink = link;
 		CEPGP_DistID = id;
 		CEPGP_SendAddonMsg("CEPGP_setDistID;" .. id, "RAID");
 		CEPGP_distSlot = slot;
-		CEPGP_distSlotID = slotNum;
 		gp = _G[CEPGP_mode..'itemGP'..x]:GetText();
 		CEPGP_lootSlot = slotNum;
 		CEPGP_responses = {};
@@ -163,8 +164,6 @@ function CEPGP_announce(link, x, slotNum, quantity)
 		_G["CEPGP_distribute_item_texture"]:SetTexture(tex);
 		_G["CEPGP_distribute_item_tex"]:SetScript('OnLeave', function() GameTooltip:Hide() end);
 		_G["CEPGP_distribute_GP_value"]:SetText(gp);
-		CEPGP_distributing = true;
-		CEPGP_toggleGPEdit(false);
 	elseif GetLootMethod() == "master" then
 		CEPGP_print("You are not the Loot Master.", 1);
 		return;

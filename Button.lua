@@ -106,37 +106,48 @@ function CEPGP_ListButton_OnClick(obj)
 		CEPGP_standby_addRank:Show();
 	end
 	if obj == "CEPGP_standby_addRank_confirm" then
-		local ranks = {};
-		for i = 1, 10 do
-			if _G["CEPGP_standby_addRank_" .. i .. "_check"]:GetChecked() then
-				ranks[i] = true;
-			else
-				ranks[i] = false;
+		local function addRankToStandby()
+			local ranks = {};
+			for i = 1, 10 do
+				if _G["CEPGP_standby_addRank_" .. i .. "_check"]:GetChecked() then
+					ranks[i] = true;
+				else
+					ranks[i] = false;
+				end
 			end
+			for i = 1, GetNumGuildMembers() do
+				local name, _, rIndex = GetGuildRosterInfo(i);
+				name = Ambiguate(name, "all");
+				if ranks[rIndex+1] and not CEPGP_tContains(CEPGP_standbyRoster, name) and name ~= UnitName("player") then
+					local _, class, rank, _, oNote, _, classFile = CEPGP_getGuildInfo(name);
+					local EP,GP = CEPGP_getEPGP(name, i);
+					CEPGP_standbyRoster[#CEPGP_standbyRoster+1] = {
+						[1] = name,
+						[2] = class,
+						[3] = rank,
+						[4] = rIndex,
+						[5] = EP,
+						[6] = GP,
+						[7] = math.floor((tonumber(EP)/tonumber(GP))*100)/100,
+						[8] = classFile
+					};
+					if CEPGP_standby_share then
+						CEPGP_SendAddonMsg("StandbyListAdd;"..name..";"..class..";"..rank..";"..rIndex..";"..EP..";"..GP..";"..classFile, "RAID");
+					end
+				end
+			end
+			CEPGP_UpdateStandbyScrollBar();
 		end
-		for i = 1, GetNumGuildMembers() do
-			local name, _, rIndex = GetGuildRosterInfo(i);
-			if string.find(name, "-") then
-				name = string.sub(name, 0, string.find(name, "-")-1);
-			end
-			if ranks[rIndex+1] and not CEPGP_tContains(CEPGP_standbyRoster, name) and name ~= UnitName("player") then
-				local _, class, rank, _, oNote, _, classFile = CEPGP_getGuildInfo(name);
-				local EP,GP = CEPGP_getEPGP(oNote);
-				CEPGP_standbyRoster[#CEPGP_standbyRoster+1] = {
-					[1] = name,
-					[2] = class,
-					[3] = rank,
-					[4] = rIndex,
-					[5] = EP,
-					[6] = GP,
-					[7] = math.floor((tonumber(EP)/tonumber(GP))*100)/100,
-					[8] = classFile
-				};
-				if CEPGP_standby_share then CEPGP_SendAddonMsg("StandbyListAdd;"..name..";"..class..";"..rank..";"..rIndex..";"..EP..";"..GP..";"..classFile, "RAID"); end
-			end
+		
+		if CEPGP_ntgetn(CEPGP_roster) < GetNumGuildMembers() then
+			CEPGP_print("Scanning guild roster. Will add rank to standby list soon");
+			local callback = function() addRankToStandby() end;
+			table.insert(CEPGP_Info.RosterStack, callback);
+		else
+			addRankToStandby();
 		end
-		CEPGP_UpdateStandbyScrollBar();
 		CEPGP_standby_addRank:Hide();
+		return;
 	end
 	if obj == "CEPGP_standby_ep_list_purge" then
 		CEPGP_standbyRoster = {};
@@ -179,9 +190,10 @@ function CEPGP_ListButton_OnClick(obj)
 			CEPGP_distribute_popup_gp_full:SetText("Give for " .. gp .. "\n(Full Price)");
 			CEPGP_distribute_popup_gp:Hide();
 		end
-		CEPGP_distPlayer = _G[_G[obj]:GetName() .. "Info"]:GetText();
-		CEPGP_distribute_popup:SetID(CEPGP_distribute:GetID()); --CEPGP_distribute:GetID gets the ID of the LOOT SLOT. Not the player.
+		
 		CEPGP_distribute_popup_gp:SetScript('OnClick', function()
+			CEPGP_distPlayer = _G[_G[obj]:GetName() .. "Info"]:GetText();
+			CEPGP_distribute_popup:SetID(CEPGP_distribute:GetID()); --CEPGP_distribute:GetID gets the ID of the LOOT SLOT. Not the player.
 			CEPGP_rate = (100-discount)/100;
 			CEPGP_distGP = true;
 			CEPGP_award = true;
@@ -189,9 +201,20 @@ function CEPGP_ListButton_OnClick(obj)
 			CEPGP_distribute_popup_give();
 		end);
 		CEPGP_distribute_popup_gp_full:SetScript('OnClick', function()
+			CEPGP_distPlayer = _G[_G[obj]:GetName() .. "Info"]:GetText();
+			CEPGP_distribute_popup:SetID(CEPGP_distribute:GetID());
 			CEPGP_rate = 1;
 			CEPGP_distGP = true;
 			CEPGP_award = true;
+			PlaySound(799);
+			CEPGP_distribute_popup_give();
+		end);
+		CEPGP_distribute_popup_free:SetScript('OnClick', function()
+			CEPGP_distPlayer = _G[_G[obj]:GetName() .. "Info"]:GetText();
+			CEPGP_distribute_popup:SetID(CEPGP_distribute:GetID());
+			CEPGP_rate = 1;
+			CEPGP_award = true;
+			CEPGP_distGP = false;
 			PlaySound(799);
 			CEPGP_distribute_popup_give();
 		end);
@@ -375,6 +398,7 @@ function CEPGP_distribute_popup_give()
 		end
 	end
 	CEPGP_print(CEPGP_distPlayer .. " is not on the candidate list for loot", true);
+	CEPGP_distPlayer = "";
 end
 
 function CEPGP_distribute_popup_OnEvent(event, msg, name)
@@ -382,10 +406,12 @@ function CEPGP_distribute_popup_OnEvent(event, msg, name)
 		if event == "UI_ERROR_MESSAGE" and arg1 == "Inventory is full." and CEPGP_distPlayer ~= "" then
 			CEPGP_print(CEPGP_distPlayer .. "'s inventory is full", 1);
 			CEPGP_distribute_popup:Hide();
+			CEPGP_distPlayer = "";
 			CEPGP_award = false;
 		elseif event == "UI_ERROR_MESSAGE" and arg1 == "You can't carry any more of those items." and CEPGP_distPlayer ~= "" then
 			CEPGP_print(CEPGP_distPlayer .. " can't carry any more of this unique item", 1);
 			CEPGP_distribute_popup:Hide();
+			CEPGP_distPlayer = "";
 			CEPGP_award = false;
 		end
 	end
